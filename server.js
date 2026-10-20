@@ -10,6 +10,9 @@ const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const checkinRoutes = require('./routes/checkins');
 const habitRoutes = require('./routes/habits');
+const pushRoutes = require('./routes/push');
+const { configurePush } = require('./lib/push');
+const { startReminders } = require('./lib/reminders');
 
 if (!process.env.SESSION_SECRET) {
   console.error('SESSION_SECRET is not set');
@@ -54,6 +57,7 @@ app.use(authRoutes);
 app.use(dashboardRoutes);
 app.use(checkinRoutes);
 app.use(habitRoutes);
+app.use(pushRoutes);
 
 app.use((req, res) => res.status(404).send('Not found'));
 app.use((err, req, res, next) => {
@@ -61,8 +65,12 @@ app.use((err, req, res, next) => {
   res.status(500).send('Something went wrong.');
 });
 
+configurePush();
 connectDB(process.env.MONGODB_URI)
-  .then(() => app.listen(PORT, () => console.log(`Questly on http://localhost:${PORT}`)))
+  .then(() => {
+    app.listen(PORT, () => console.log(`Questly on http://localhost:${PORT}`));
+    if (configurePush()) startReminders();
+  })
   .catch((err) => {
     console.error('Startup failed:', err.message);
     process.exit(1);

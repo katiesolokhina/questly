@@ -8,7 +8,8 @@ const { DAY_SHORT, DAY_FULL, isISODate, localToday } = require('../lib/dates');
 const router = express.Router();
 router.use('/habits', requireAuth);
 
-const EMPTY = { name: '', kind: 'habit', icon: 'leaf', every: true, days: [1, 2, 3, 4, 5], startDate: '' };
+const EMPTY = { name: '', kind: 'habit', icon: 'leaf', every: true, days: [1, 2, 3, 4, 5], startDate: '', reminderOn: false, reminderTime: '09:00' };
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 // Form body → clean values + list of errors. Never trusts the browser.
 function parseForm(body, today) {
@@ -19,14 +20,17 @@ function parseForm(body, today) {
   const rawDays = [].concat(body.days || []); // one checkbox → string, several → array
   const days = [...new Set(rawDays.map(Number).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))].sort();
   const startDate = String(body.startDate || '') || today;
+  const reminderOn = body.reminderOn === 'on';
+  const reminderTime = String(body.reminderTime || '09:00');
 
   const errors = {};
   if (!name) errors.name = 'Give it a name.';
   else if (name.length > 40) errors.name = 'Keep it to 40 characters or fewer.';
   if (!every && !days.length) errors.days = 'Pick at least one day.';
   if (!isISODate(startDate)) errors.startDate = 'Enter a valid date.';
+  if (reminderOn && !TIME.test(reminderTime)) errors.reminderTime = 'Pick a time.';
 
-  return { values: { name, kind, icon, every, days, startDate }, errors };
+  return { values: { name, kind, icon, every, days, startDate, reminderOn, reminderTime }, errors };
 }
 
 function toDoc(v) {
@@ -36,6 +40,7 @@ function toDoc(v) {
     icon: v.icon,
     schedule: { every: v.every, days: v.every ? [0, 1, 2, 3, 4, 5, 6] : v.days },
     startDate: v.startDate,
+    reminder: { enabled: v.reminderOn, time: TIME.test(v.reminderTime) ? v.reminderTime : '09:00' },
   };
 }
 
@@ -80,6 +85,8 @@ router.get('/habits/:id/edit', async (req, res, next) => {
       every: habit.schedule.every,
       days: habit.schedule.every ? EMPTY.days : [...habit.schedule.days],
       startDate: habit.startDate,
+      reminderOn: Boolean(habit.reminder && habit.reminder.enabled),
+      reminderTime: (habit.reminder && habit.reminder.time) || '09:00',
     };
     render(res, { mode: 'edit', habitId: habit.id, values, today: localToday(req.user.timezone) });
   } catch (err) {

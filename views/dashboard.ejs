@@ -3,20 +3,23 @@
 <head>
   <%- include('partials/head') %>
   <link rel="stylesheet" href="/css/dashboard.css">
+  <script src="/js/push-setup.js" defer></script>
   <title><%= habit ? habit.name + ' · ' : '' %>Questly</title>
 </head>
 <body>
 <div class="app">
 
-  <header class="topbar">
-    <div class="brand">
- <img class="logo-img" src="/icons/logo-mark.svg" alt="" width="32" height="32">
-    <form method="post" action="/logout">
-      <button class="icon-btn" type="submit" aria-label="Sign out">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
-      </button>
-    </form>
-  </header>
+<header class="topbar">
+  <div class="brand">
+    <img class="logo-img" src="/icons/logo-mark.svg" alt="" width="32" height="32">
+    <span class="brand-name">Questly</span>
+  </div>
+  <form method="post" action="/logout">
+    <button class="icon-btn" type="submit" aria-label="Sign out">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+    </button>
+  </form>
+</header>
 
   <nav class="chips" aria-label="Habits">
     <% habits.forEach((h) => { const on = habit && h.id === habit.id; %>
@@ -158,6 +161,25 @@
       <li><span class="key key-today"></span>Today</li>
       <li><span class="key key-off"></span>Off day</li>
     </ul>
+    <section class="push-card" id="push-card" hidden aria-live="polite">
+  <div data-state="off" hidden>
+    <p class="push-title">Get reminders on this device</p>
+    <p class="small-14 muted">Questly nudges you at each habit's reminder time, only if you haven't checked in.</p>
+    <button class="btn-outline" type="button" data-action="enable">Turn on reminders</button>
+  </div>
+  <div data-state="on" hidden>
+    <p class="push-title">Reminders are on for this device</p>
+    <div class="push-actions">
+      <button class="link-btn" type="button" data-action="test">Send a test</button>
+      <button class="link-btn" type="button" data-action="disable">Turn off</button>
+    </div>
+  </div>
+  <div data-state="blocked" hidden>
+    <p class="push-title">Notifications are blocked</p>
+    <p class="small-14 muted">Allow notifications for Questly in your phone's settings, then reopen the app.</p>
+  </div>
+  <p class="small-14 muted" data-status></p>
+</section>
   </main>
 <% } %>
 </div>

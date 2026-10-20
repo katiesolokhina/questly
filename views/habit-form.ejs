@@ -82,6 +82,24 @@
       <% } %>
     </div>
 
+    <fieldset class="group reminder">
+      <legend>Reminder</legend>
+      <label class="switch-row" for="reminderOn">
+        <span>Remind me if I haven't checked in</span>
+        <input class="switch" type="checkbox" id="reminderOn" name="reminderOn" <%= values.reminderOn ? 'checked' : '' %>>
+      </label>
+      <div class="reminder-time">
+        <div class="field">
+          <label for="reminderTime">Time</label>
+          <input id="reminderTime" name="reminderTime" type="time" value="<%= values.reminderTime %>"
+            <%- errors.reminderTime ? 'aria-invalid="true" aria-describedby="time-error"' : 'aria-describedby="time-hint"' %>>
+          <% if (errors.reminderTime) { %><span class="field-error" id="time-error"><%= errors.reminderTime %></span><% } else { %>
+            <span class="hint" id="time-hint">Skipped on off days and once you've checked in. Medications get one more nudge 2 hours later.</span>
+          <% } %>
+        </div>
+      </div>
+    </fieldset>
+
     <button class="btn btn-primary btn-block" type="submit">Save</button>
   </form>
 
