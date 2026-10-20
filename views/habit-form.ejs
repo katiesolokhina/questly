@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <%- include('partials/head') %>
+  <link rel="stylesheet" href="/css/habit-form.css">
+  <script src="/js/habit-form.js" defer></script>
+  <title><%= mode === 'new' ? 'New habit' : 'Edit habit' %> · Questly</title>
+</head>
+<body>
+<div class="form-page">
+
+  <header class="form-bar">
+    <a class="bar-link" href="<%= habitId ? '/?h=' + habitId : '/' %>">Cancel</a>
+    <h1><%= mode === 'new' ? 'New habit' : 'Edit habit' %></h1>
+    <button class="bar-save" type="submit" form="habit-form">Save</button>
+  </header>
+
+  <form id="habit-form" class="form-body" method="post" action="<%= mode === 'new' ? '/habits' : '/habits/' + habitId %>" novalidate>
+
+    <% if (Object.keys(errors).length) { %>
+      <p class="alert" role="alert">Fix the highlighted field<%= Object.keys(errors).length > 1 ? 's' : '' %> below.</p>
+    <% } %>
+
+    <div class="field">
+      <label for="name">Name</label>
+      <input id="name" name="name" type="text" maxlength="40" required value="<%= values.name %>" placeholder="e.g. Evening walk"
+        <%- errors.name ? 'aria-invalid="true" aria-describedby="name-error"' : '' %> <%= mode === 'new' ? 'autofocus' : '' %>>
+      <% if (errors.name) { %><span class="field-error" id="name-error"><%= errors.name %></span><% } %>
+    </div>
+
+    <fieldset class="group">
+      <legend>Type</legend>
+      <div class="segmented">
+        <input class="sr-only" type="radio" id="kind-medication" name="kind" value="medication" <%= values.kind === 'medication' ? 'checked' : '' %>>
+        <label for="kind-medication">Medication</label>
+        <input class="sr-only" type="radio" id="kind-habit" name="kind" value="habit" <%= values.kind === 'habit' ? 'checked' : '' %>>
+        <label for="kind-habit">Habit</label>
+      </div>
+    </fieldset>
+
+    <fieldset class="group">
+      <legend>Icon</legend>
+      <div class="icon-grid">
+        <% Object.keys(icons).forEach((name) => { %>
+          <input class="sr-only" type="radio" id="icon-<%= name %>" name="icon" value="<%= name %>" <%= values.icon === name ? 'checked' : '' %>>
+          <label for="icon-<%= name %>" class="icon-option">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="<%= icons[name] %>"/></svg>
+            <span class="sr-only"><%= name %></span>
+          </label>
+        <% }) %>
+      </div>
+    </fieldset>
+
+    <fieldset class="group schedule">
+      <legend>Schedule</legend>
+      <div class="segmented">
+        <input class="sr-only" type="radio" id="schedule-every" name="schedule" value="every" <%= values.every ? 'checked' : '' %>>
+        <label for="schedule-every">Every day</label>
+        <input class="sr-only" type="radio" id="schedule-specific" name="schedule" value="specific" <%= values.every ? '' : 'checked' %>>
+        <label for="schedule-specific">Specific days</label>
+      </div>
+
+      <div class="weekdays-wrap">
+        <fieldset class="weekdays"<%- errors.days ? ' aria-describedby="days-error"' : '' %>>
+          <legend class="sr-only">Days of the week</legend>
+          <% DAY_SHORT.forEach((s, i) => { %>
+            <input class="sr-only" type="checkbox" id="day-<%= i %>" name="days" value="<%= i %>" <%= values.days.includes(i) ? 'checked' : '' %>>
+            <label for="day-<%= i %>" class="day-toggle" title="<%= DAY_FULL[i] %>"><span aria-hidden="true"><%= s[0] %></span><span class="sr-only"><%= DAY_FULL[i] %></span></label>
+          <% }) %>
+        </fieldset>
+        <% if (errors.days) { %><span class="field-error" id="days-error"><%= errors.days %></span><% } %>
+        <p class="hint">Only these days count toward your streak. Other days show as off days, never missed.</p>
+      </div>
+    </fieldset>
+
+    <div class="field">
+      <label for="startDate">Start date</label>
+      <input id="startDate" name="startDate" type="date" value="<%= values.startDate %>"
+        <%- errors.startDate ? 'aria-invalid="true" aria-describedby="start-error"' : 'aria-describedby="start-hint"' %>>
+      <% if (errors.startDate) { %><span class="field-error" id="start-error"><%= errors.startDate %></span><% } else { %>
+        <span class="hint" id="start-hint">Days before this never count as missed.</span>
+      <% } %>
+    </div>
+
+    <button class="btn btn-primary btn-block" type="submit">Save</button>
+  </form>
+
+  <% if (mode === 'edit') { %>
+    <form class="archive" method="post" action="/habits/<%= habitId %>/archive" data-confirm="Archive this habit? It will disappear from your list. Its history is kept.">
+      <button class="archive-btn" type="submit">Archive this habit</button>
+      <p class="hint">Hides it from your list. History is kept.</p>
+    </form>
+  <% } %>
+</div>
+</body>
+</html>

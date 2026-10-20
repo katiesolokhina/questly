@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <%- include('partials/head') %>
+  <title>Sign in · Questly</title>
+</head>
+<body>
+  <main class="auth">
+    <h1 class="auth-logo">
+  <picture>
+    <source srcset="/brand/questly-logo-dark.svg" media="(prefers-color-scheme: dark)">
+    <img src="/brand/questly-logo.svg" alt="Questly: your daily quests" width="1000" height="1000">
+  </picture>
+</h1>
+
+    <form class="card auth-form" method="post" action="/login" novalidate>
+      <% if (error) { %>
+        <p class="alert" role="alert"><%= error %></p>
+      <% } %>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" required value="<%= email %>" <%= email ? '' : 'autofocus' %>>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required <%= email ? 'autofocus' : '' %>>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+    </form>
+
+    <p class="muted small center">Private, invite-only account</p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <%- include('partials/head') %>
+  <title>Questly</title>
+</head>
+<body>
+  <main class="auth">
+    <div class="card">
+      <p>Signed in as <strong><%= user.name %></strong> (<%= user.email %>)</p>
+      <form method="post" action="/logout">
+        <button class="btn btn-primary btn-block" type="submit">Sign out</button>
+      </form>
+    </div>
+  </main>
+</body>
+</html>
