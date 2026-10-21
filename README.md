@@ -2,7 +2,7 @@
 
 **Your daily quests.** Questly is a small, fast web app for daily check-ins: medications, habits, anything you want to do on a schedule. It's built as an installable PWA with push reminders and family accounts, and it runs in production on my own server.
 
-Live at [questly.trisolocreations.com](https://questly.trisolocreations.com) (invite-only).
+**[Try the demo →](https://questly.trisolocreations.com/demo)** No sign-up: you get your own private copy with 3 months of sample data, deleted after 24 hours.
 
 Built by [Katie Solokhina](https://katie.trisolocreations.com).
 
@@ -30,6 +30,7 @@ Built by [Katie Solokhina](https://katie.trisolocreations.com).
 - **Home-screen shortcuts:** Check in, Note, and Week, on Android and desktop.
 - **Family accounts:** the admin invites members with one-time links. The admin can reset access, turn accounts off, or delete them, but never sees anyone's data.
 - **Settings:** password change (signs out your other devices), light, dark or system theme, archived habits, and CSV export.
+- **Public demo:** every visitor gets their own throwaway account seeded with realistic history. It shows every feature in the first few seconds.
 
 ## Stack
 
@@ -54,6 +55,7 @@ There's no frontend framework and no build step: pages work without JavaScript, 
 - **Counters are derived, never decremented.** Supply left = amount at the last refill minus the check-ins since then. That's why undo, backfill and past-day fixes always give the right number, and it can't drift.
 - **Exactly-once side effects come from atomic database claims, not timers.** Reminders, low-supply alerts, the weekly push and milestone celebrations each claim their slot with a conditional update or a unique index *before* acting. A restart, two overlapping ticks or a page reload can never send or show anything twice.
 - **Paid APIs can't run up a bill.** Pollen is fetched once per place per day (today + a 4-day forecast, saved), pre-fetched at 6 AM so pages never wait, and backs off for 30 minutes after a failure. A hard daily cap is claimed atomically in the database before every call, and the key is restricted to one API and the server's IP. Tests run against a local stub, so the real API is never called.
+- **The demo can't cost money or leak into real data.** Each visitor gets an isolated account, not a shared login anyone could vandalize. Demo accounts never call external APIs: quotes come from a built-in list, and pollen is sample data stored under a fake place. They can't change a password, set a location, receive push, or appear in the admin's family list, and the server enforces all of this, not just the UI. Opening `/demo` only shows a page, so link previews and crawlers can't create accounts. Creation is a same-origin POST, rate limited per IP and capped globally, and a cleanup job deletes expired copies along with everything they own.
 - **Location stays coarse.** Pollen needs only a city, so coordinates are rounded to about 1 km and no street address is ever stored.
 - **CSRF protection** combines SameSite=Lax cookies with an `Origin` check on every state-changing request. Links (including home-screen shortcuts) only ever navigate; changing data always takes a POST.
 - **Invite and reset links** are random tokens stored only as SHA-256 hashes. They're single-use (claimed atomically) and expire.
@@ -75,6 +77,7 @@ lib/
   milestones.js      Best streak + badges
   weekly.js          Weekly summary + push wording
   pollen.js          Pollen fetch + cache + cost guards, place-name geocoding
+  demo.js            Demo accounts: sample data, cleanup
   reminders.js       The once-a-minute tick: reminders, supply alerts, weekly push, pollen pre-fetch
   push.js, messages.js, export.js, sessions.js, icons.js
 routes/              One file per area (auth, checkins, habits, settings, family, week, go…)
@@ -115,6 +118,7 @@ node scripts/make-admin.js --email=you@example.com
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | no | Push notifications; without them, push is simply off |
 | `POLLEN_API_KEY` | no | Google Pollen API key; without it, the pollen feature is hidden |
 | `POLLEN_DAILY_CAP` | no | Maximum Pollen API calls per day (default 100) |
+| `DEMO_MAX` | no | Maximum demo accounts alive at once (default 200) |
 | `BACKUP_DIR`, `BACKUP_KEEP` | no | Where backups go (default `./backups`) and how many to keep (default 14) |
 
 Generate the secrets:
@@ -130,10 +134,11 @@ npx web-push generate-vapid-keys                                           # VAP
 npm test
 ```
 
-The suite has over 100 tests:
+The suite has about 115 tests:
 - **Unit tests** for the date, streak, pause, counter, rating, milestone and weekly rules, and for pollen parsing. These run in milliseconds.
 - **End-to-end tests** that start the real `server.js` against an in-memory MongoDB and drive it like a browser. They cover sign-in, check-in and undo, past-day fixes, notes, pauses, counters, ratings, milestones, the week page, shortcuts, settings, family invites and resets, CSRF rejection, and escaping.
 - **Tests for the reminder loop,** run in-process at fixed times. These include a Sunday when the clocks fall back.
+- **Demo tests:** isolation, sample data, the locked-down routes, rate limit and cap, and cleanup.
 - **Pollen tests** against a local stub of Google and Open-Meteo. They cover one call per day, the daily cap, back-off after a failure, and that the key never appears in logs.
 
 Tests never touch your real database. Set `TEST_MONGODB_URI` to use a local `mongod` instead of the in-memory server.
