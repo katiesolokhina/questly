@@ -4,7 +4,7 @@
 
 Live at [questly.trisolocreations.com](https://questly.trisolocreations.com) (invite-only).
 
-Built by [Katie Solokhina](https://kdreams.me).
+Built by [Katie Solokhina](https://katie.trisolocreations.com).
 
 ---
 
