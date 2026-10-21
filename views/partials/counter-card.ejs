@@ -1,0 +1,48 @@
+<%# Supply countdown and goal progress. Rendered only for habits that turned them on. %>
+<% const fmt = (n) => Number(n).toLocaleString('en-US'); %>
+<% if (supply) { %>
+  <section class="counter-card<%= supply.low ? ' counter-low' : '' %>" aria-labelledby="supply-title">
+    <div class="counter-head">
+      <h2 class="counter-kicker" id="supply-title">Supply</h2>
+      <% if (supply.out) { %><span class="counter-badge">Out</span><% } else if (supply.low) { %><span class="counter-badge">Running low</span><% } %>
+    </div>
+    <p class="counter-big"><span class="counter-num"><%= fmt(supply.left) %></span> <%= supply.unit %> left</p>
+    <div class="counter-bar" role="img" aria-label="<%= fmt(supply.left) %> of <%= fmt(supply.size) %> <%= supply.unit %> left"><span style="width: <%= supply.pct %>%"></span></div>
+    <p class="counter-sub">
+      <% if (supply.out) { %>
+        Tap “Add a refill” when you restock.
+      <% } else if (supply.runsOut) { %>
+        Enough for about <strong><%= supply.daysLeft %> day<%= supply.daysLeft === 1 ? '' : 's' %></strong> · runs out around <strong><%= supply.runsOutLabel %></strong>
+      <% } else { %>
+        Enough for more than 3 years.
+      <% } %>
+    </p>
+    <div class="counter-actions">
+      <% if (supply.reorderUrl) { %>
+        <a class="btn btn-primary counter-btn" href="<%= supply.reorderUrl %>" target="_blank" rel="noopener noreferrer">Reorder<span class="sr-only"> (opens in a new tab)</span></a>
+      <% } %>
+      <form method="post" action="/habits/<%= habit.id %>/supply/refill">
+        <button class="btn-outline counter-btn" type="submit">Add a refill <span class="muted">+<%= fmt(supply.size) %></span></button>
+      </form>
+    </div>
+  </section>
+<% } %>
+<% if (goal) { %>
+  <section class="counter-card" aria-labelledby="goal-title">
+    <div class="counter-head">
+      <h2 class="counter-kicker" id="goal-title"><%= goal.label %></h2>
+      <% if (goal.reached) { %><span class="counter-badge counter-badge-win">Reached</span><% } %>
+    </div>
+    <p class="counter-big"><span class="counter-num"><%= fmt(goal.progress) %></span> of <%= fmt(goal.target) %> <%= goal.unit %></p>
+    <div class="counter-bar counter-bar-goal" role="img" aria-label="<%= goal.pct %>% of the goal"><span style="width: <%= goal.pct %>%"></span></div>
+    <p class="counter-sub">
+      <% if (goal.reached) { %>
+        Goal reached. Nice work.
+      <% } else if (goal.finish) { %>
+        <%= goal.pct %>% · on pace to finish <strong><%= goal.finishLabel %></strong>
+      <% } else { %>
+        <%= goal.pct %>%
+      <% } %>
+    </p>
+  </section>
+<% } %>

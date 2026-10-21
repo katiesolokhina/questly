@@ -36,6 +36,29 @@ const habitSchema = new mongoose.Schema(
         reason: { type: String, enum: ['travel', 'sick', 'doctor', 'other'], default: 'other' },
       },
     ],
+    // Supply countdown (e.g. doses left in a bottle). `base` is the amount at `baseAt`
+    // (last refill or correction); what's left is derived from check-ins since then.
+    supply: {
+      enabled: { type: Boolean, default: false },
+      unit: { type: String, trim: true, maxlength: 20, default: 'doses' },
+      perCheckin: { type: Number, min: 1, max: 1000, default: 1 },
+      size: { type: Number, min: 1, max: 100000, default: 30 },
+      base: { type: Number, min: 0, max: 1000000, default: 0 },
+      baseAt: { type: Date },
+      baseDate: { type: String, match: /^\d{4}-\d{2}-\d{2}$/ },
+      warnDays: { type: Number, min: 0, max: 60, default: 7 },
+      reorderUrl: { type: String, trim: true, maxlength: 500, default: '' },
+      lowSentFor: { type: Date }, // the baseAt we already sent a "running low" push for
+    },
+    // Count-up goal (e.g. 1,095 days, 30 workouts, 2,000 pages).
+    goal: {
+      enabled: { type: Boolean, default: false },
+      label: { type: String, trim: true, maxlength: 40, default: '' },
+      unit: { type: String, trim: true, maxlength: 20, default: 'check-ins' },
+      perCheckin: { type: Number, min: 1, max: 1000, default: 1 },
+      target: { type: Number, min: 1, max: 1000000 },
+      from: { type: String, match: /^\d{4}-\d{2}-\d{2}$/ },
+    },
     // Push reminder at a local time ("HH:MM"), only if not checked in yet.
     // Medications also get one follow-up nudge 2 hours later.
     reminder: {

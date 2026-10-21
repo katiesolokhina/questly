@@ -100,4 +100,4 @@ function localToday(tz = 'America/Chicago') {
   return new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date());
 }
 
-module.exports = { startApp, client, withDb, localToday, ROOT };
+module.exports = { startApp, startDatabase, client, withDb, localToday, ROOT };

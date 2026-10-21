@@ -1,0 +1,28 @@
+/* Supply countdown + goal progress cards (dashboard) */
+.counter-card { background: var(--surface); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.counter-low { box-shadow: inset 0 0 0 2px var(--missed); }
+.counter-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 22px; }
+.counter-kicker { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.counter-badge { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 10px; color: var(--missed-ink); background: color-mix(in srgb, var(--missed) 16%, var(--surface)); }
+.counter-badge-win { color: var(--aqua-deep); background: color-mix(in srgb, var(--aqua) 22%, var(--surface)); }
+.counter-big { font-size: 15px; color: var(--muted); }
+.counter-num { font-size: 30px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.counter-bar { height: 10px; border-radius: 5px; background: var(--off); overflow: hidden; }
+.counter-bar > span { display: block; height: 100%; border-radius: 5px; background: var(--aqua); }
+.counter-low .counter-bar > span { background: var(--missed); }
+.counter-sub { font-size: 13px; color: var(--muted); }
+.counter-sub strong { color: var(--ink); font-weight: 600; }
+.counter-actions { display: flex; gap: 8px; margin-top: 4px; }
+.counter-actions > * { flex: 1; }
+.counter-btn { width: 100%; height: 44px; padding: 0 10px; font-size: 15px; white-space: nowrap; }
+.counter-btn .muted { font-weight: 500; }
+
+/* Habit form: counter fields */
+.counter-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.counter-fields .field-wide { grid-column: 1 / -1; }
+.counter-group:not(:has(.switch:checked)) .counter-fields { display: none; }
+.counter-fields input[type="text"], .counter-fields input[type="number"], .counter-fields input[type="url"], .counter-fields input[type="date"] {
+  height: 48px; padding: 0 14px; width: 100%;
+  border: 1.5px solid var(--border); border-radius: 12px;
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 16px;
+}

@@ -260,6 +260,88 @@ test('core flows', async (t) => {
     assert.doesNotMatch(dash, /pause-banner/);
   });
 
+  // ---------- Counters ----------
+  const habitForm = (over = {}) => ({ name: 'Bottle', kind: 'medication', icon: 'pill', schedule: 'every', startDate: today, ...over });
+  let sup;
+
+  await t.test('supply: validation needs a refill size and whole numbers; javascript: links rejected', async () => {
+    let r = await c('/habits', { method: 'POST', form: habitForm({ supplyOn: 'on', supplySize: '', supplyPer: '1', supplyWarn: '7' }) });
+    assert.equal(r.status, 422);
+    assert.match(r.text, /How much is in a full refill/);
+    r = await c('/habits', { method: 'POST', form: habitForm({ supplyOn: 'on', supplySize: '90', supplyLeft: '-3', supplyPer: '1', supplyWarn: '7', supplyUrl: 'javascript:alert(1)' }) });
+    assert.equal(r.status, 422);
+    assert.match(r.text, /whole number, 0 or more/);
+    assert.match(r.text, /Links must start with https/);
+  });
+
+  await t.test('supply: card shows what is left; check-in uses one, undo gives it back', async () => {
+    const r = await c('/habits', { method: 'POST', form: habitForm({ supplyOn: 'on', supplySize: '90', supplyLeft: '9', supplyPer: '1', supplyUnit: 'doses', supplyWarn: '7', supplyUrl: 'shop.example.com/refill' }) });
+    sup = r.location.match(/h=([a-f0-9]{24})/)[1];
+    let dash = (await c(`/?h=${sup}`)).text;
+    assert.match(dash, /counter-num">9<\/span> doses left/);
+    assert.doesNotMatch(dash, /Running low/);
+    assert.match(dash, /href="https:\/\/shop\.example\.com\/refill"/);
+    await c(`/habits/${sup}/checkin`, { method: 'POST', form: {} });
+    dash = (await c(`/?h=${sup}`)).text;
+    assert.match(dash, /counter-num">8<\/span>/);
+    assert.match(dash, /about <strong>8 days<\/strong>/);
+    await c(`/habits/${sup}/checkin/undo`, { method: 'POST', form: {} });
+    assert.match((await c(`/?h=${sup}`)).text, /counter-num">9<\/span>/);
+  });
+
+  await t.test('supply: editing the amount re-anchors it and flags running low', async () => {
+    const edit = (await c(`/habits/${sup}/edit`)).text;
+    assert.match(edit, /id="supplyLeft"[^>]*value="9"/);
+    await c(`/habits/${sup}`, { method: 'POST', form: habitForm({ supplyOn: 'on', supplySize: '90', supplyLeft: '5', supplyPer: '1', supplyUnit: 'doses', supplyWarn: '7' }) });
+    const dash = (await c(`/?h=${sup}`)).text;
+    assert.match(dash, /counter-num">5<\/span>/);
+    assert.match(dash, /Running low/);
+    // Saving again without touching the amount keeps it.
+    await c(`/habits/${sup}/checkin`, { method: 'POST', form: {} });
+    await c(`/habits/${sup}`, { method: 'POST', form: habitForm({ supplyOn: 'on', supplySize: '90', supplyLeft: '4', supplyPer: '1', supplyUnit: 'doses', supplyWarn: '7' }) });
+    assert.match((await c(`/?h=${sup}`)).text, /counter-num">4<\/span>/);
+  });
+
+  await t.test('supply: "Add a refill" adds a full refill; a low-alert claim resets', async () => {
+    await withDb(app.uri, () => Habit.updateOne({ _id: sup }, { $set: { 'supply.lowSentFor': new Date() } }));
+    const r = await c(`/habits/${sup}/supply/refill`, { method: 'POST', form: {} });
+    assert.equal(r.status, 302);
+    const dash = (await c(`/?h=${sup}`)).text;
+    assert.match(dash, /counter-num">94<\/span>/);
+    assert.doesNotMatch(dash, /Running low/);
+    const doc = await withDb(app.uri, () => Habit.findById(sup).lean());
+    assert.equal(doc.supply.lowSentFor, undefined);
+    // Today's dose was logged before the refill (old bottle), so undoing it leaves the new count alone.
+    await c(`/habits/${sup}/checkin/undo`, { method: 'POST', form: {} });
+    assert.match((await c(`/?h=${sup}`)).text, /counter-num">94<\/span>/);
+  });
+
+  await t.test('goal: progress, per-check-in amount, and reached', async () => {
+    await c(`/habits/${sup}`, { method: 'POST', form: habitForm({ goalOn: 'on', goalLabel: 'Reading', goalTarget: '40', goalUnit: 'pages', goalPer: '20', goalFrom: today }) });
+    let dash = (await c(`/?h=${sup}`)).text;
+    assert.doesNotMatch(dash, /Supply<\/h2>/, 'supply turned off');
+    assert.match(dash, /Reading<\/h2>/);
+    assert.match(dash, /counter-num">0<\/span> of 40 pages/);
+    await c(`/habits/${sup}/checkin`, { method: 'POST', form: {} });
+    dash = (await c(`/?h=${sup}`)).text;
+    assert.match(dash, /counter-num">20<\/span> of 40 pages/);
+    assert.match(dash, /50% · on pace to finish/);
+    await c(`/habits/${sup}`, { method: 'POST', form: habitForm({ goalOn: 'on', goalTarget: '20', goalUnit: 'pages', goalPer: '20', goalFrom: today }) });
+    dash = (await c(`/?h=${sup}`)).text;
+    assert.match(dash, /Goal reached/);
+    assert.match(dash, /Goal<\/h2>/, 'blank name falls back to "Goal"');
+  });
+
+  await t.test('goal: validation needs a target', async () => {
+    const r = await c(`/habits/${sup}`, { method: 'POST', form: habitForm({ goalOn: 'on', goalTarget: '', goalPer: '1' }) });
+    assert.equal(r.status, 422);
+    assert.match(r.text, /Set a target/);
+  });
+
+  await t.test('habits without counters show no counter cards', async () => {
+    assert.doesNotMatch((await c(`/?h=${h}`)).text, /counter-card/);
+  });
+
   await t.test('cross-site POSTs are blocked', async () => {
     const r = await c(`/habits/${h}/checkin`, { method: 'POST', form: {}, origin: 'https://evil.example' });
     assert.equal(r.status, 403);

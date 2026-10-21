@@ -3,6 +3,7 @@
 <head>
   <%- include('partials/head') %>
   <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/counter.css">
   <script src="/js/push-setup.js" defer></script>
   <title><%= habit ? habit.name + ' · ' : '' %>Questly</title>
 </head>
@@ -143,6 +144,7 @@
   <% } %>
 </a>
 
+<%- include('partials/counter-card') %>
     <div class="stats">
       <div class="stat">
         <span class="stat-label">Streak</span>

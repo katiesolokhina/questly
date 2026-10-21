@@ -6,12 +6,17 @@ const Checkin = require('../models/Checkin');
 const ReminderLog = require('../models/ReminderLog');
 const DayNote = require('../models/DayNote');
 const icons = require('../lib/icons');
+const { supplyLeft } = require('../lib/counter');
 const { DAY_SHORT, DAY_FULL, isISODate, localToday, longDate, daysBetweenInclusive } = require('../lib/dates');
 
 const router = express.Router();
 router.use('/habits', requireAuth);
 
-const EMPTY = { name: '', kind: 'habit', icon: 'leaf', every: true, days: [1, 2, 3, 4, 5], startDate: '', reminderOn: false, reminderTime: '09:00', description: '', linkUrl: '', linkLabel: '' };
+const EMPTY = {
+  name: '', kind: 'habit', icon: 'leaf', every: true, days: [1, 2, 3, 4, 5], startDate: '', reminderOn: false, reminderTime: '09:00', description: '', linkUrl: '', linkLabel: '',
+  supplyOn: false, supplyLeft: '', supplySize: '30', supplyPer: '1', supplyUnit: 'doses', supplyWarn: '7', supplyUrl: '',
+  goalOn: false, goalLabel: '', goalTarget: '', goalUnit: 'days', goalPer: '1', goalFrom: '',
+};
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 // Accepts only http(s) URLs, so a link can never be "javascript:…". Adds https:// if missing.
@@ -27,6 +32,15 @@ function cleanUrl(raw) {
   } catch {
     return { error: 'That doesn’t look like a web address.' };
   }
+}
+
+// Whole number in [min, max]. '' → null (not given), anything else invalid → NaN.
+function intField(raw, min, max) {
+  const t = String(raw ?? '').trim().replace(/,/g, '');
+  if (!t) return null;
+  if (!/^\d+$/.test(t)) return NaN;
+  const n = Number(t);
+  return n >= min && n <= max ? n : NaN;
 }
 
 // Form body → clean values + list of errors. Never trusts the browser.
@@ -45,7 +59,43 @@ function parseForm(body, today) {
   const link = cleanUrl(body.linkUrl);
   const linkUrl = link.url ?? String(body.linkUrl || '').trim();
 
+  // Counters: raw strings are kept in `values` so a rejected form re-renders what was typed.
+  const str = (k, d = '') => String(body[k] ?? d).trim();
+  const supplyOn = body.supplyOn === 'on';
+  const goalOn = body.goalOn === 'on';
+  const supplyUrlCheck = cleanUrl(body.supplyUrl);
+  const counters = {
+    supplyOn, supplyLeft: str('supplyLeft'), supplySize: str('supplySize'), supplyPer: str('supplyPer', '1'),
+    supplyUnit: str('supplyUnit'), supplyWarn: str('supplyWarn', '7'), supplyUrl: supplyUrlCheck.url ?? str('supplyUrl'),
+    goalOn, goalLabel: str('goalLabel'), goalTarget: str('goalTarget'), goalUnit: str('goalUnit'), goalPer: str('goalPer', '1'), goalFrom: str('goalFrom'),
+  };
+  const nums = {
+    supplyLeft: intField(counters.supplyLeft, 0, 100000),
+    supplySize: intField(counters.supplySize, 1, 100000),
+    supplyPer: intField(counters.supplyPer, 1, 1000),
+    supplyWarn: intField(counters.supplyWarn, 0, 60),
+    goalTarget: intField(counters.goalTarget, 1, 1000000),
+    goalPer: intField(counters.goalPer, 1, 1000),
+  };
+
   const errors = {};
+  if (supplyOn) {
+    if (nums.supplySize === null) errors.supplySize = 'How much is in a full refill?';
+    else if (Number.isNaN(nums.supplySize)) errors.supplySize = 'Enter a whole number from 1 to 100,000.';
+    if (Number.isNaN(nums.supplyLeft)) errors.supplyLeft = 'Enter a whole number, 0 or more.';
+    if (Number.isNaN(nums.supplyPer) || nums.supplyPer === null) errors.supplyPer = 'Enter a whole number from 1 to 1,000.';
+    if (Number.isNaN(nums.supplyWarn) || nums.supplyWarn === null) errors.supplyWarn = 'Enter 0 to 60 days.';
+    if (counters.supplyUnit.length > 20) errors.supplyUnit = 'Keep it to 20 characters or fewer.';
+    if (supplyUrlCheck.error) errors.supplyUrl = supplyUrlCheck.error;
+  }
+  if (goalOn) {
+    if (nums.goalTarget === null) errors.goalTarget = 'Set a target.';
+    else if (Number.isNaN(nums.goalTarget)) errors.goalTarget = 'Enter a whole number from 1 to 1,000,000.';
+    if (Number.isNaN(nums.goalPer) || nums.goalPer === null) errors.goalPer = 'Enter a whole number from 1 to 1,000.';
+    if (counters.goalUnit.length > 20) errors.goalUnit = 'Keep it to 20 characters or fewer.';
+    if (counters.goalLabel.length > 40) errors.goalLabel = 'Keep it to 40 characters or fewer.';
+    if (counters.goalFrom && !isISODate(counters.goalFrom)) errors.goalFrom = 'Enter a valid date.';
+  }
   if (!name) errors.name = 'Give it a name.';
   else if (name.length > 40) errors.name = 'Keep it to 40 characters or fewer.';
   if (!every && !days.length) errors.days = 'Pick at least one day.';
@@ -55,7 +105,40 @@ function parseForm(body, today) {
   if (link.error) errors.linkUrl = link.error;
   if (linkLabel.length > 40) errors.linkLabel = 'Keep the label to 40 characters or fewer.';
 
-  return { values: { name, kind, icon, every, days, startDate, reminderOn, reminderTime, description, linkUrl, linkLabel }, errors };
+  return { values: { name, kind, icon, every, days, startDate, reminderOn, reminderTime, description, linkUrl, linkLabel, ...counters }, nums, errors };
+}
+
+// Supply and goal subdocuments. The supply is re-anchored (amount left as of now)
+// when it's first turned on or when "amount left" was changed on the form.
+function counterDoc(v, nums, { habit, rows, today }) {
+  const prev = habit && habit.supply && habit.supply.enabled ? habit.supply : null;
+  const old = habit ? habit.toObject() : {};
+  const supply = { ...(old.supply || {}), enabled: v.supplyOn };
+  if (v.supplyOn) {
+    Object.assign(supply, {
+      unit: v.supplyUnit || 'doses',
+      perCheckin: nums.supplyPer,
+      size: nums.supplySize,
+      warnDays: nums.supplyWarn,
+      reorderUrl: v.supplyUrl,
+    });
+    const current = prev ? supplyLeft(prev, rows, today) : null;
+    const wanted = nums.supplyLeft ?? current ?? nums.supplySize;
+    if (!prev || wanted !== current) {
+      Object.assign(supply, { base: wanted, baseAt: new Date(), baseDate: today, lowSentFor: undefined });
+    }
+  }
+  const goal = { ...(old.goal || {}), enabled: v.goalOn };
+  if (v.goalOn) {
+    Object.assign(goal, {
+      label: v.goalLabel,
+      unit: v.goalUnit || 'check-ins',
+      perCheckin: nums.goalPer,
+      target: nums.goalTarget,
+      from: v.goalFrom || v.startDate,
+    });
+  }
+  return { supply, goal };
 }
 
 function toDoc(v) {
@@ -77,6 +160,32 @@ function render(res, { mode, habitId = null, values, errors = {}, today }) {
   });
 }
 
+function checkinRows(habit) {
+  return Checkin.find({ habitId: habit._id }, { date: 1, checkedInAt: 1 }).lean();
+}
+
+// Form values for an existing habit's counters. "Amount left" shows what's left right now.
+async function counterValues(habit, today) {
+  const s = habit.supply || {};
+  const g = habit.goal || {};
+  const left = s.enabled ? supplyLeft(s, await checkinRows(habit), today) : '';
+  return {
+    supplyOn: Boolean(s.enabled),
+    supplyLeft: String(left),
+    supplySize: String(s.size ?? EMPTY.supplySize),
+    supplyPer: String(s.perCheckin ?? 1),
+    supplyUnit: s.unit || EMPTY.supplyUnit,
+    supplyWarn: String(s.warnDays ?? 7),
+    supplyUrl: s.reorderUrl || '',
+    goalOn: Boolean(g.enabled),
+    goalLabel: g.label || '',
+    goalTarget: g.target ? String(g.target) : '',
+    goalUnit: g.unit || EMPTY.goalUnit,
+    goalPer: String(g.perCheckin ?? 1),
+    goalFrom: g.from || habit.startDate,
+  };
+}
+
 async function ownHabit(req) {
   if (!mongoose.isValidObjectId(req.params.id)) return null;
   return Habit.findOne({ _id: req.params.id, userId: req.user._id, archived: false });
@@ -91,9 +200,9 @@ router.get('/habits/new', (req, res) => {
 router.post('/habits', async (req, res, next) => {
   try {
     const today = localToday(req.user.timezone);
-    const { values, errors } = parseForm(req.body, today);
+    const { values, nums, errors } = parseForm(req.body, today);
     if (Object.keys(errors).length) return render(res, { mode: 'new', values, errors, today });
-    const habit = await Habit.create({ userId: req.user._id, ...toDoc(values) });
+    const habit = await Habit.create({ userId: req.user._id, ...toDoc(values), ...counterDoc(values, nums, { today }) });
     res.redirect(`/?h=${habit.id}`);
   } catch (err) {
     next(err);
@@ -117,6 +226,7 @@ router.get('/habits/:id/edit', async (req, res, next) => {
       description: habit.description || '',
       linkUrl: (habit.link && habit.link.url) || '',
       linkLabel: (habit.link && habit.link.label) || '',
+      ...(await counterValues(habit, localToday(req.user.timezone))),
     };
     render(res, { mode: 'edit', habitId: habit.id, values, today: localToday(req.user.timezone) });
   } catch (err) {
@@ -129,9 +239,31 @@ router.post('/habits/:id', async (req, res, next) => {
     const habit = await ownHabit(req);
     if (!habit) return res.status(404).send('Habit not found');
     const today = localToday(req.user.timezone);
-    const { values, errors } = parseForm(req.body, today);
+    const { values, nums, errors } = parseForm(req.body, today);
     if (Object.keys(errors).length) return render(res, { mode: 'edit', habitId: habit.id, values, errors, today });
-    habit.set(toDoc(values));
+    const rows = await checkinRows(habit);
+    habit.set({ ...toDoc(values), ...counterDoc(values, nums, { habit, rows, today }) });
+    await habit.save();
+    res.redirect(`/?h=${habit.id}`);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// "I got a refill": adds one full refill to what's left now.
+router.post('/habits/:id/supply/refill', async (req, res, next) => {
+  try {
+    const habit = await ownHabit(req);
+    if (!habit) return res.status(404).send('Habit not found');
+    if (!habit.supply || !habit.supply.enabled) return res.redirect(`/?h=${habit.id}`);
+    const today = localToday(req.user.timezone);
+    const left = supplyLeft(habit.supply, await checkinRows(habit), today);
+    habit.set({
+      'supply.base': Math.min(1000000, left + habit.supply.size),
+      'supply.baseAt': new Date(),
+      'supply.baseDate': today,
+      'supply.lowSentFor': undefined,
+    });
     await habit.save();
     res.redirect(`/?h=${habit.id}`);
   } catch (err) {

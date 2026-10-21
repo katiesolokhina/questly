@@ -1,0 +1,53 @@
+<%# Supply countdown + goal fields for the habit form. Hidden by CSS until their switch is on. %>
+<%
+  const f = (id, label, opts = {}) => {
+    const err = errors[id];
+    const attrs = [
+      `id="${id}"`, `name="${id}"`,
+      `type="${opts.type || 'text'}"`,
+      opts.numeric ? 'inputmode="numeric" autocomplete="off"' : '',
+      opts.max ? `maxlength="${opts.max}"` : '',
+      opts.placeholder ? `placeholder="${opts.placeholder}"` : '',
+      err ? `aria-invalid="true" aria-describedby="${id}-err"` : (opts.hint ? `aria-describedby="${id}-hint"` : ''),
+    ].filter(Boolean).join(' ');
+    return { attrs, err, hint: opts.hint, label, id, wide: opts.wide };
+  };
+  const supplyFields = [
+    f('supplyLeft', 'Amount left now', { numeric: true, placeholder: 'e.g. 9', hint: mode === 'edit' && values.supplyOn ? 'Change this to correct the count.' : 'Leave blank to start full.' }),
+    f('supplySize', 'Full refill', { numeric: true, placeholder: 'e.g. 90' }),
+    f('supplyPer', 'Used per check-in', { numeric: true }),
+    f('supplyUnit', 'Unit', { max: 20, placeholder: 'doses' }),
+    f('supplyWarn', 'Warn me with days left', { numeric: true, hint: 'Sends one push notification per refill.' , wide: true }),
+    f('supplyUrl', 'Reorder link (optional)', { type: 'url', placeholder: 'https://', wide: true }),
+  ];
+  const goalFields = [
+    f('goalLabel', 'Name (optional)', { max: 40, placeholder: 'e.g. 3-year course', wide: true }),
+    f('goalTarget', 'Target', { numeric: true, placeholder: 'e.g. 1095' }),
+    f('goalUnit', 'Unit', { max: 20, placeholder: 'days' }),
+    f('goalPer', 'Counts per check-in', { numeric: true, hint: 'e.g. 20 if each check-in is 20 pages.' }),
+    f('goalFrom', 'Counting from', { type: 'date' }),
+  ];
+  const render = (fields) => fields.map((x) => `
+    <div class="field${x.wide ? ' field-wide' : ''}">
+      <label for="${x.id}">${x.label}</label>
+      <input ${x.attrs} value="${String(values[x.id] ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}">
+      ${x.err ? `<span class="field-error" id="${x.id}-err">${x.err}</span>` : x.hint ? `<span class="hint" id="${x.id}-hint">${x.hint}</span>` : ''}
+    </div>`).join('');
+%>
+<fieldset class="group counter-group">
+  <legend>Supply countdown</legend>
+  <label class="switch-row" for="supplyOn">
+    <span>Count down what's left, like doses in a bottle</span>
+    <input class="switch" type="checkbox" id="supplyOn" name="supplyOn" <%= values.supplyOn ? 'checked' : '' %>>
+  </label>
+  <div class="counter-fields"><%- render(supplyFields) %></div>
+</fieldset>
+
+<fieldset class="group counter-group">
+  <legend>Goal</legend>
+  <label class="switch-row" for="goalOn">
+    <span>Count up toward a target, like 30 workouts</span>
+    <input class="switch" type="checkbox" id="goalOn" name="goalOn" <%= values.goalOn ? 'checked' : '' %>>
+  </label>
+  <div class="counter-fields"><%- render(goalFields) %></div>
+</fieldset>
