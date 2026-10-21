@@ -19,15 +19,21 @@ const demoLimiter = rateLimit({
   limit: 5,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  handler: (req, res) => res.status(429).render('login', { error: 'Too many demos from here. Try again in an hour.', email: '' }),
+  handler: (req, res) => res.status(429).render('demo', { error: 'Too many demos from here. Try again in an hour.' }),
 });
 
-// "Try the demo": a POST (so it's same-origin checked and never triggered by a crawler or a link).
+// The shareable link (GitHub, portfolio). Only shows a page: a GET never creates an account,
+// so link previews (Slack, LinkedIn…) and crawlers can't spin up demos.
+router.get('/demo', (req, res) => {
+  res.render('demo', { error: null });
+});
+
+// "Start the demo": a POST (so it's same-origin checked and never triggered by a crawler or a link).
 router.post('/demo', demoLimiter, async (req, res, next) => {
   try {
     const timezone = validTimezone(req.body.timezone) ? req.body.timezone : 'America/Chicago';
     const user = await createDemo({ timezone });
-    if (!user) return res.status(503).render('login', { error: 'The demo is busy right now. Try again later.', email: '' });
+    if (!user) return res.status(503).render('demo', { error: 'The demo is busy right now. Try again later.' });
     req.session.regenerate((err) => {
       if (err) return next(err);
       req.session.userId = user._id.toString();

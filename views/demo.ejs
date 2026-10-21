@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <%- include('partials/head') %>
+  <link rel="stylesheet" href="/css/demo.css">
+  <script src="/js/timezone.js" defer></script>
+  <meta name="description" content="Try Questly: a daily check-in app for habits and medications. Your own private demo with sample data, no sign-up.">
+  <title>Try the demo · Questly</title>
+</head>
+<body>
+  <main class="auth">
+    <%- include('partials/auth-brand') %>
+    <section class="card demo-card">
+      <h2 class="demo-title">Try Questly</h2>
+      <p class="demo-lead">A daily check-in app for habits and medications: streaks, reminders, supply countdowns, symptom ratings with a pollen overlay, milestones and weekly summaries.</p>
+      <ul class="demo-points">
+        <li>Your own private copy, filled with 3 months of sample data</li>
+        <li>Click anything: check in, edit, delete. Nobody else sees it.</li>
+        <li>No sign-up. It's deleted after 24 hours.</li>
+      </ul>
+      <% if (error) { %><p class="alert" role="alert"><%= error %></p><% } %>
+      <form method="post" action="/demo">
+        <input type="hidden" name="timezone" value="">
+        <button class="btn btn-primary btn-demo-start" type="submit">Start the demo</button>
+      </form>
+    </section>
+    <p class="demo-foot">Built by <a href="https://katie.trisolocreations.com">Katie Solokhina</a> · <a href="https://github.com/katiesolokhina">GitHub</a></p>
+  </main>
+</body>
+</html>

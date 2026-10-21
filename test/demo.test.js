@@ -28,8 +28,11 @@ test('demo accounts', async (t) => {
   const demo = client(app.base);
   let demoId;
 
-  await t.test('login page offers the demo; it signs you straight into your own copy', async () => {
-    assert.match((await client(app.base)('/login')).text, /Try the demo/);
+  await t.test('/demo is a shareable page; opening it creates nothing; Start signs you into your own copy', async () => {
+    const page = await client(app.base)('/demo');
+    assert.equal(page.status, 200);
+    assert.match(page.text, /Start the demo/);
+    assert.equal(await withDb(app.uri, () => User.countDocuments({ demo: true })), 0, 'a GET (link preview, crawler) never creates an account');
     const r = await demo('/demo', { method: 'POST', form: { timezone: 'America/New_York' } });
     assert.equal(r.status, 302);
     assert.equal(r.location, '/');
@@ -107,6 +110,7 @@ test('demo accounts', async (t) => {
     let r = await client(app.base)('/demo', { method: 'POST', form: {} });
     assert.equal(r.status, 503);
     assert.match(r.text, /busy/);
+    assert.match(r.text, /Start the demo/, 'errors show on the demo page');
     r = await client(app.base)('/demo', { method: 'POST', form: {} }); // 5th try this hour: still allowed (and still busy)
     assert.equal(r.status, 503);
     r = await client(app.base)('/demo', { method: 'POST', form: {} }); // 6th: rate limited
