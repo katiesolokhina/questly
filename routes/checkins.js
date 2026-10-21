@@ -4,6 +4,8 @@ const { requireAuth } = require('../middleware/auth');
 const Habit = require('../models/Habit');
 const Checkin = require('../models/Checkin');
 const DayNote = require('../models/DayNote');
+const Rating = require('../models/Rating');
+const { ratingConfig, chips } = require('../lib/ratings');
 const { messageForCheckin } = require('../lib/messages');
 const { localToday, localTime, isYm, isISODate, longDate, dow, DAY_FULL } = require('../lib/dates');
 const icons = require('../lib/icons');
@@ -76,10 +78,12 @@ function dayError(date, today) {
 }
 
 async function dayView(req, habit, date, today, extra = {}) {
-  const [checkin, note] = await Promise.all([
+  const [checkin, note, rated] = await Promise.all([
     Checkin.findOne({ habitId: habit._id, date }).lean(),
     DayNote.findOne({ habitId: habit._id, date }).lean(),
+    Rating.findOne({ habitId: habit._id, date }).lean(),
   ]);
+  const ratingCfg = ratingConfig(habit);
   const isToday = date === today;
   const scheduled = habit.isScheduledOn(dow(date));
   let status;
@@ -105,6 +109,8 @@ async function dayView(req, habit, date, today, extra = {}) {
     habit, date, dateLabel: longDate(date), status, icons, isToday,
     noteText: extra.noteText ?? (note ? note.text : ''), noteError: extra.noteError || null, noteSaved: Boolean(extra.noteSaved),
     noteMax: NOTE_MAX, back: backTo(habit.id, m), m,
+    rating: ratingCfg && { question: isToday ? ratingCfg.question : ratingCfg.question.replace(/\btoday\b/i, 'that day'), chips: chips(ratingCfg, rated ? rated.score : null) },
+    ratingSaved: Boolean(extra.ratingSaved),
   };
 }
 
@@ -115,7 +121,7 @@ router.get('/habits/:id/day/:date', requireAuth, async (req, res, next) => {
     const { date } = req.params;
     const today = localToday(req.user.timezone);
     if (dayError(date, today)) return res.redirect(backTo(habit.id, req.query.m));
-    res.render('day', await dayView(req, habit, date, today, { noteSaved: req.query.saved === 'note' }));
+    res.render('day', await dayView(req, habit, date, today, { noteSaved: req.query.saved === 'note', ratingSaved: req.query.saved === 'rating' }));
   } catch (err) {
     next(err);
   }
@@ -174,6 +180,35 @@ router.post('/habits/:id/day/:date/note', requireAuth, async (req, res, next) =>
     }
     const m = isYm(req.body.m) ? `&m=${req.body.m}` : '';
     res.redirect(`/habits/${habit.id}/day/${date}?saved=note${m}`);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Rate any day up to today (1–5), or clear it with score 0. Works whether or not the day was done.
+router.post('/habits/:id/day/:date/rating', requireAuth, async (req, res, next) => {
+  try {
+    const habit = await ownHabit(req);
+    if (!habit) return res.status(404).send('Habit not found');
+    const { date } = req.params;
+    const today = localToday(req.user.timezone);
+    if (dayError(date, today)) return res.status(400).send('Only days up to today can be rated.');
+    if (!ratingConfig(habit)) return res.status(400).send('Daily rating is off for this habit.');
+
+    const score = Number(req.body.score);
+    if (!Number.isInteger(score) || score < 0 || score > 5) return res.status(400).send('Pick a score from 1 to 5.');
+    if (score === 0) {
+      await Rating.deleteOne({ habitId: habit._id, date });
+    } else {
+      await Rating.updateOne(
+        { habitId: habit._id, date },
+        { $set: { score }, $setOnInsert: { userId: req.user._id, habitId: habit._id, date } },
+        { upsert: true }
+      );
+    }
+    const m = isYm(req.body.m) ? req.body.m : '';
+    if (req.body.back === 'home') return res.redirect(`${backTo(habit.id, m)}#rating`);
+    res.redirect(`/habits/${habit.id}/day/${date}?saved=rating${m ? `&m=${m}` : ''}`);
   } catch (err) {
     next(err);
   }

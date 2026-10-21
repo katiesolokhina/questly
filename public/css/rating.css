@@ -1,0 +1,49 @@
+/* Daily rating: chips + month trend. Levels: 5 = best day, 1 = worst (direction set per habit). */
+:root { --lvl-5: #9FE3DA; --lvl-4: #C9B3EC; --lvl-3: #E8B08A; --lvl-2: #E08A55; --lvl-1: #C25E2A; }
+
+.rating-card { background: var(--surface); border-radius: var(--radius); padding: 14px 16px; }
+.rating-group { margin: 0; padding: 0; border: 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.rating-q { padding: 0; font-size: 15px; font-weight: 600; color: var(--ink); }
+.rating-chips { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.rating-chip {
+  min-height: 56px; padding: 4px 2px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface); color: var(--ink);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 0;
+}
+.rating-chip.is-on { border: 2px solid var(--ink); color: #1F2230; }
+.rating-chip.is-on.lvl-5 { background: var(--lvl-5); } .rating-chip.is-on.lvl-4 { background: var(--lvl-4); }
+.rating-chip.is-on.lvl-3 { background: var(--lvl-3); } .rating-chip.is-on.lvl-2 { background: var(--lvl-2); }
+.rating-chip.is-on.lvl-1 { background: var(--lvl-1); color: #FFFFFF; }
+.rating-chip:focus-visible { outline: 2px solid var(--aqua-deep); outline-offset: 2px; }
+.rating-n { font-size: 17px; font-weight: 700; }
+.rating-label { font-size: 11px; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.trend-card { background: var(--surface); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.trend-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.trend-head h2 { font-size: 17px; font-weight: 700; }
+.trend-avg { font-size: 13px; color: var(--muted); }
+.trend-avg strong { color: var(--ink); }
+.trend-empty { font-size: 14px; color: var(--muted); }
+.trend-chart { display: flex; flex-direction: column; gap: 6px; }
+.trend-bars { height: 120px; display: grid; gap: 2px; align-items: end; border-bottom: 1px solid var(--border); }
+.trend-bar { display: block; border-radius: 3px 3px 0 0; min-height: 0; }
+.trend-bar.lvl-5, .trend-key.lvl-5 { background: var(--lvl-5); } .trend-bar.lvl-4 { background: var(--lvl-4); }
+.trend-bar.lvl-3 { background: var(--lvl-3); } .trend-bar.lvl-2 { background: var(--lvl-2); }
+.trend-bar.lvl-1, .trend-key.lvl-1 { background: var(--lvl-1); }
+.trend-dots { display: grid; gap: 2px; justify-items: center; }
+.trend-dots > span { width: 5px; height: 5px; border-radius: 50%; }
+.trend-dot { background: var(--aqua-deep); }
+.trend-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+.trend-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+.trend-legend li { display: flex; align-items: center; gap: 5px; }
+.trend-key { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.trend-key-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--aqua-deep); flex-shrink: 0; }
+.trend-findings { border-radius: 14px; background: var(--lilac-tint); color: var(--lilac-ink); padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; font-weight: 500; }
+
+/* Habit form: rating fields */
+.rating-fields { display: flex; flex-direction: column; gap: 12px; }
+.rating-labels { display: flex; flex-direction: column; gap: 6px; }
+.rating-labels .field { flex-direction: row; align-items: center; gap: 10px; }
+.rating-labels input { height: 44px; padding: 0 12px; flex: 1; min-width: 0; border: 1.5px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; }
+.rating-labels label { width: 16px; font-size: 15px; font-weight: 700; color: var(--muted); text-align: center; }
+.rating-fields input[type="text"]#ratingQuestion { height: 48px; padding: 0 14px; width: 100%; border: 1.5px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; }
+.counter-group:not(:has(.switch:checked)) .rating-fields { display: none; }

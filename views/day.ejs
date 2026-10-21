@@ -4,6 +4,7 @@
   <%- include('partials/head') %>
   <link rel="stylesheet" href="/css/habit-form.css">
   <link rel="stylesheet" href="/css/day.css">
+  <link rel="stylesheet" href="/css/rating.css">
   <title><%= dateLabel %> · <%= habit.name %> · Questly</title>
 </head>
 <body>
@@ -41,6 +42,11 @@
         <button class="btn btn-primary btn-block" type="submit"><%= status.kind === 'missed' ? 'Mark as done' : 'Log anyway' %></button>
       </form>
       <p class="hint center">It will be noted as added later.</p>
+    <% } %>
+
+    <% if (rating) { %>
+      <%- include('partials/rating-chips', { ratingDate: date, ratingQuestion: rating.question, ratingChips: rating.chips, ratingBack: 'day', ratingM: m }) %>
+      <% if (ratingSaved) { %><p class="note-saved center" role="status">Rating saved</p><% } %>
     <% } %>
 
     <form class="note-form" method="post" action="/habits/<%= habit.id %>/day/<%= date %>/note" novalidate>

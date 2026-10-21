@@ -1,0 +1,34 @@
+<%# Month trend for the daily rating. Local: rating (from buildDashboard), monthLabel %>
+<% if (rating) { const t = rating.trend; %>
+  <section class="trend-card" aria-labelledby="trend-title">
+    <div class="trend-head">
+      <h2 id="trend-title"><%= monthLabel.split(' ')[0] %> ratings</h2>
+      <% if (t.average) { %><span class="trend-avg">Avg <strong><%= t.average %></strong> · <%= t.averageLabel %></span><% } %>
+    </div>
+    <% if (!t.rated) { %>
+      <p class="trend-empty">Rate a day to start your trend. Ratings work on any day, done or not.</p>
+    <% } else { %>
+      <div class="trend-chart" role="img" aria-label="<%= t.summary %>">
+        <div class="trend-bars" style="grid-template-columns: repeat(<%= t.bars.length %>, minmax(0, 1fr))">
+          <% t.bars.forEach((b) => { %>
+            <span class="trend-bar<%= b.score ? ' lvl-' + b.level : '' %>" style="height: <%= b.height %>%" title="<%= b.title %>"></span>
+          <% }) %>
+        </div>
+        <div class="trend-dots" style="grid-template-columns: repeat(<%= t.bars.length %>, minmax(0, 1fr))" aria-hidden="true">
+          <% t.bars.forEach((b) => { %><span class="<%= b.done ? 'trend-dot' : '' %>"></span><% }) %>
+        </div>
+        <div class="trend-axis" aria-hidden="true"><span><%= t.firstLabel %></span><span><%= t.lastLabel %></span></div>
+      </div>
+      <ul class="trend-legend" aria-hidden="true">
+        <li><span class="trend-key lvl-5"></span>Best</li>
+        <li><span class="trend-key lvl-1"></span>Worst</li>
+        <li><span class="trend-key-dot"></span>Done</li>
+      </ul>
+      <% if (t.findings.length) { %>
+        <div class="trend-findings">
+          <% t.findings.forEach((f) => { %><p><%= f %></p><% }) %>
+        </div>
+      <% } %>
+    <% } %>
+  </section>
+<% } %>

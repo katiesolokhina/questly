@@ -4,6 +4,7 @@
   <%- include('partials/head') %>
   <link rel="stylesheet" href="/css/habit-form.css">
   <link rel="stylesheet" href="/css/counter.css">
+  <link rel="stylesheet" href="/css/rating.css">
   <script src="/js/habit-form.js" defer></script>
   <title><%= mode === 'new' ? 'New habit' : 'Edit habit' %> · Questly</title>
 </head>
@@ -124,6 +125,7 @@
       </div>
     </fieldset>
 <%- include('partials/counter-fields') %>
+<%- include('partials/rating-fields') %>
     <button class="btn btn-primary btn-block" type="submit">Save</button>
   </form>
 

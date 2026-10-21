@@ -338,6 +338,47 @@ test('core flows', async (t) => {
     assert.match(r.text, /Set a target/);
   });
 
+  // ---------- Daily rating ----------
+  let mood;
+  await t.test('rating: habit defaults, rate today, tap again to clear', async () => {
+    const r = await c('/habits', { method: 'POST', form: { name: 'Mood', kind: 'habit', icon: 'heart', schedule: 'every', startDate: addDays(today, -5), ratingOn: 'on' } });
+    mood = r.location.match(/h=([a-f0-9]{24})/)[1];
+    let dash = (await c(`/?h=${mood}`)).text;
+    assert.match(dash, /How did it go today\?/);
+    assert.match(dash, /rating-label">Great</);
+    assert.match(dash, /Rate a day to start your trend/);
+    const saved = await c(`/habits/${mood}/day/${today}/rating`, { method: 'POST', form: { score: '4', back: 'home' } });
+    assert.equal(saved.location, `/?h=${mood}#rating`);
+    dash = (await c(`/?h=${mood}`)).text;
+    assert.match(dash, /name="score" value="0" aria-pressed="true"/);
+    assert.match(dash, /Avg <strong>4\.0<\/strong> · Good/);
+    await c(`/habits/${mood}/day/${today}/rating`, { method: 'POST', form: { score: '0', back: 'home' } });
+    assert.doesNotMatch((await c(`/?h=${mood}`)).text, /aria-pressed="true"/);
+  });
+
+  await t.test('rating: past days from the day page; future, bad scores and "off" are refused', async () => {
+    const past = addDays(today, -2);
+    const r = await c(`/habits/${mood}/day/${past}/rating`, { method: 'POST', form: { score: '2' } });
+    assert.match(r.location, /saved=rating/);
+    assert.match((await c(r.location)).text, /Rating saved/);
+    assert.equal((await c(`/habits/${mood}/day/${addDays(today, 1)}/rating`, { method: 'POST', form: { score: '2' } })).status, 400);
+    assert.equal((await c(`/habits/${mood}/day/${past}/rating`, { method: 'POST', form: { score: '9' } })).status, 400);
+    assert.equal((await c(`/habits/${h}/day/${past}/rating`, { method: 'POST', form: { score: '2' } })).status, 400);
+    assert.match((await c('/settings/export.csv')).text, new RegExp(`"Mood","Habit","${past}","\\w+","Missed","","","2 Meh"`));
+  });
+
+  await t.test('rating: medication defaults and custom labels', async () => {
+    const r = await c('/habits', { method: 'POST', form: { name: 'Allergy', kind: 'medication', icon: 'drop', schedule: 'every', startDate: today, ratingOn: 'on', ratingLabel5: 'Awful' } });
+    const id = r.location.match(/h=([a-f0-9]{24})/)[1];
+    const dash = (await c(`/?h=${id}`)).text;
+    assert.match(dash, /How are your symptoms today\?/);
+    assert.match(dash, /rating-label">Clear</);
+    assert.match(dash, /rating-label">Awful</);
+    assert.match((await c(`/habits/${id}/edit`)).text, /id="ratingDir-low"[^>]*checked/);
+    const too = await c(`/habits/${id}`, { method: 'POST', form: { name: 'Allergy', kind: 'medication', schedule: 'every', startDate: today, ratingOn: 'on', ratingLabel1: 'x'.repeat(17) } });
+    assert.equal(too.status, 422);
+  });
+
   await t.test('habits without counters show no counter cards', async () => {
     assert.doesNotMatch((await c(`/?h=${h}`)).text, /counter-card/);
   });

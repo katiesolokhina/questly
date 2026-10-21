@@ -7,6 +7,8 @@ const ReminderLog = require('../models/ReminderLog');
 const DayNote = require('../models/DayNote');
 const icons = require('../lib/icons');
 const { supplyLeft } = require('../lib/counter');
+const Rating = require('../models/Rating');
+const { DEFAULTS: RATING_DEFAULTS, defaultsFor } = require('../lib/ratings');
 const { DAY_SHORT, DAY_FULL, isISODate, localToday, longDate, daysBetweenInclusive } = require('../lib/dates');
 
 const router = express.Router();
@@ -16,6 +18,7 @@ const EMPTY = {
   name: '', kind: 'habit', icon: 'leaf', every: true, days: [1, 2, 3, 4, 5], startDate: '', reminderOn: false, reminderTime: '09:00', description: '', linkUrl: '', linkLabel: '',
   supplyOn: false, supplyLeft: '', supplySize: '30', supplyPer: '1', supplyUnit: 'doses', supplyWarn: '7', supplyUrl: '',
   goalOn: false, goalLabel: '', goalTarget: '', goalUnit: 'days', goalPer: '1', goalFrom: '',
+  ratingOn: false, ratingQuestion: '', ratingLabels: ['', '', '', '', ''], ratingDir: '',
 };
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -78,7 +81,15 @@ function parseForm(body, today) {
     goalPer: intField(counters.goalPer, 1, 1000),
   };
 
+  const ratingOn = body.ratingOn === 'on';
+  const ratingQuestion = str('ratingQuestion');
+  const ratingLabels = [1, 2, 3, 4, 5].map((i) => str(`ratingLabel${i}`));
+  const ratingDir = ['low', 'high'].includes(body.ratingDir) ? body.ratingDir : (defaultsFor(kind).lowIsGood ? 'low' : 'high');
+  Object.assign(counters, { ratingOn, ratingQuestion, ratingLabels, ratingDir });
+
   const errors = {};
+  if (ratingQuestion.length > 80) errors.ratingQuestion = 'Keep it to 80 characters or fewer.';
+  if (ratingLabels.some((l) => l.length > 16)) errors.ratingLabels = 'Keep each label to 16 characters or fewer.';
   if (supplyOn) {
     if (nums.supplySize === null) errors.supplySize = 'How much is in a full refill?';
     else if (Number.isNaN(nums.supplySize)) errors.supplySize = 'Enter a whole number from 1 to 100,000.';
@@ -138,7 +149,9 @@ function counterDoc(v, nums, { habit, rows, today }) {
       from: v.goalFrom || v.startDate,
     });
   }
-  return { supply, goal };
+  // Rating: settings are kept when it's turned off, so turning it back on restores them.
+  const rating = { enabled: v.ratingOn, question: v.ratingQuestion, labels: v.ratingLabels, lowIsGood: v.ratingDir === 'low' };
+  return { supply, goal, rating };
 }
 
 function toDoc(v) {
@@ -156,7 +169,8 @@ function toDoc(v) {
 
 function render(res, { mode, habitId = null, values, errors = {}, today }) {
   res.status(Object.keys(errors).length ? 422 : 200).render('habit-form', {
-    mode, habitId, values, errors, today, icons, DAY_SHORT, DAY_FULL,
+    mode, habitId, values: { ...values, ratingDir: values.ratingDir || (defaultsFor(values.kind).lowIsGood ? 'low' : 'high') },
+    errors, today, icons, DAY_SHORT, DAY_FULL, ratingDefaults: RATING_DEFAULTS,
   });
 }
 
@@ -183,6 +197,12 @@ async function counterValues(habit, today) {
     goalUnit: g.unit || EMPTY.goalUnit,
     goalPer: String(g.perCheckin ?? 1),
     goalFrom: g.from || habit.startDate,
+    ratingOn: Boolean(habit.rating && habit.rating.enabled),
+    ratingQuestion: (habit.rating && habit.rating.question) || '',
+    ratingLabels: [0, 1, 2, 3, 4].map((i) => (habit.rating && habit.rating.labels && habit.rating.labels[i]) || ''),
+    ratingDir: habit.rating && typeof habit.rating.lowIsGood === 'boolean'
+      ? (habit.rating.lowIsGood ? 'low' : 'high')
+      : (defaultsFor(habit.kind).lowIsGood ? 'low' : 'high'),
   };
 }
 
@@ -323,6 +343,7 @@ router.post('/habits/:id/delete', async (req, res, next) => {
     await Checkin.deleteMany({ habitId: habit._id });
     await ReminderLog.deleteMany({ habitId: habit._id });
     await DayNote.deleteMany({ habitId: habit._id });
+    await Rating.deleteMany({ habitId: habit._id });
     await Habit.deleteOne({ _id: habit._id });
     res.redirect(from === 'settings' ? '/settings?saved=deleted' : '/');
   } catch (err) {

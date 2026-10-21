@@ -1,0 +1,36 @@
+<%# Daily rating settings for the habit form. Blank fields use the habit type's defaults. %>
+<% const rd = ratingDefaults[values.kind === 'medication' ? 'medication' : 'habit']; %>
+<fieldset class="group counter-group">
+  <legend>Daily rating</legend>
+  <label class="switch-row" for="ratingOn">
+    <span>Rate each day from 1 to 5 and see the trend</span>
+    <input class="switch" type="checkbox" id="ratingOn" name="ratingOn" <%= values.ratingOn ? 'checked' : '' %>>
+  </label>
+  <div class="rating-fields">
+    <div class="field">
+      <label for="ratingQuestion">Question</label>
+      <input id="ratingQuestion" name="ratingQuestion" type="text" maxlength="80" placeholder="<%= rd.question %>" value="<%= values.ratingQuestion %>"
+        <%- errors.ratingQuestion ? 'aria-invalid="true" aria-describedby="rq-err"' : '' %>>
+      <% if (errors.ratingQuestion) { %><span class="field-error" id="rq-err"><%= errors.ratingQuestion %></span><% } %>
+    </div>
+    <div class="field">
+      <span class="label-like" id="rl-title">Labels for 1 to 5</span>
+      <div class="rating-labels" role="group" aria-labelledby="rl-title">
+        <% for (let i = 0; i < 5; i++) { %>
+          <div class="field">
+            <label for="ratingLabel<%= i + 1 %>"><%= i + 1 %></label>
+            <input id="ratingLabel<%= i + 1 %>" name="ratingLabel<%= i + 1 %>" type="text" maxlength="16" placeholder="<%= rd.labels[i] %>" value="<%= values.ratingLabels[i] || '' %>">
+          </div>
+        <% } %>
+      </div>
+      <% if (errors.ratingLabels) { %><span class="field-error"><%= errors.ratingLabels %></span><% } else { %>
+        <span class="hint">Blank ones use the suggestions shown.</span><% } %>
+    </div>
+    <div class="segmented" role="radiogroup" aria-label="Which end is a good day">
+      <input class="sr-only" type="radio" id="ratingDir-low" name="ratingDir" value="low" <%= values.ratingDir === 'low' ? 'checked' : '' %>>
+      <label for="ratingDir-low">1 is a good day</label>
+      <input class="sr-only" type="radio" id="ratingDir-high" name="ratingDir" value="high" <%= values.ratingDir === 'high' ? 'checked' : '' %>>
+      <label for="ratingDir-high">5 is a good day</label>
+    </div>
+  </div>
+</fieldset>

@@ -10,6 +10,7 @@ const DailyMessage = require('../models/DailyMessage');
 const PushSubscription = require('../models/PushSubscription');
 const AccessToken = require('../models/AccessToken');
 const DayNote = require('../models/DayNote');
+const Rating = require('../models/Rating');
 const { deleteUserSessions } = require('../lib/sessions');
 
 const router = express.Router();
@@ -117,6 +118,7 @@ router.post('/settings/family/members/:id/delete', async (req, res, next) => {
     await Promise.all([
       Checkin.deleteMany({ userId: target._id }),
       DayNote.deleteMany({ userId: target._id }),
+      Rating.deleteMany({ userId: target._id }),
       ReminderLog.deleteMany({ habitId: { $in: habitIds } }),
       Habit.deleteMany({ userId: target._id }),
       DailyMessage.deleteMany({ userId: target._id }),

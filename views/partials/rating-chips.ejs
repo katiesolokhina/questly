@@ -1,0 +1,16 @@
+<%# 1–5 rating for one day. Locals: habit, ratingDate, ratingQuestion, ratingChips, ratingBack ('home' | 'day'), ratingM %>
+<form class="rating-card" id="rating" method="post" action="/habits/<%= habit.id %>/day/<%= ratingDate %>/rating">
+  <input type="hidden" name="back" value="<%= ratingBack %>">
+  <input type="hidden" name="m" value="<%= ratingM || '' %>">
+  <fieldset class="rating-group">
+    <legend class="rating-q"><%= ratingQuestion %></legend>
+    <div class="rating-chips">
+      <% ratingChips.forEach((c) => { %>
+        <button class="rating-chip lvl-<%= c.level %><%= c.on ? ' is-on' : '' %>" type="submit" name="score" value="<%= c.on ? 0 : c.score %>" aria-pressed="<%= c.on %>"<%- c.on ? ` aria-label="${c.score}, ${c.label}. Selected, tap to clear"` : '' %>>
+          <span class="rating-n"><%= c.score %></span>
+          <span class="rating-label"><%= c.label %></span>
+        </button>
+      <% }) %>
+    </div>
+  </fieldset>
+</form>

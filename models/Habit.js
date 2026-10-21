@@ -59,6 +59,14 @@ const habitSchema = new mongoose.Schema(
       target: { type: Number, min: 1, max: 1000000 },
       from: { type: String, match: /^\d{4}-\d{2}-\d{2}$/ },
     },
+    // Daily 1–5 rating with its own question and labels. lowIsGood: 1 is the best day
+    // (symptoms: Clear … Severe); otherwise 5 is (mood: Rough … Great).
+    rating: {
+      enabled: { type: Boolean, default: false },
+      question: { type: String, trim: true, maxlength: 80, default: '' },
+      labels: { type: [{ type: String, trim: true, maxlength: 16 }], default: undefined },
+      lowIsGood: { type: Boolean },
+    },
     // Push reminder at a local time ("HH:MM"), only if not checked in yet.
     // Medications also get one follow-up nudge 2 hours later.
     reminder: {

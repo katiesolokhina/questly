@@ -4,6 +4,7 @@
   <%- include('partials/head') %>
   <link rel="stylesheet" href="/css/dashboard.css">
   <link rel="stylesheet" href="/css/counter.css">
+  <link rel="stylesheet" href="/css/rating.css">
   <script src="/js/push-setup.js" defer></script>
   <title><%= habit ? habit.name + ' · ' : '' %>Questly</title>
 </head>
@@ -135,6 +136,7 @@
       </section>
     <% } %>
 
+    <% if (rating) { %><%- include('partials/rating-chips', { ratingDate: today, ratingQuestion: rating.question, ratingChips: rating.chips, ratingBack: 'home', ratingM: ym }) %><% } %>
     <a class="today-note" href="/habits/<%= habit.id %>/day/<%= today %>?m=<%= ym %>">
   <% if (todayNote) { %>
     <span class="today-note-label">Today's note</span>
@@ -218,6 +220,7 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
   Plan a pause
 </a>
+<%- include('partials/rating-trend') %>
   </main>
 <% } %>
 </div>
