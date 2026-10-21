@@ -13,6 +13,7 @@ const habitRoutes = require('./routes/habits');
 const pushRoutes = require('./routes/push');
 const { configurePush } = require('./lib/push');
 const { startReminders } = require('./lib/reminders');
+const settingsRoutes = require('./routes/settings');
 
 if (!process.env.SESSION_SECRET) {
   console.error('SESSION_SECRET is not set');
@@ -49,6 +50,7 @@ app.use(
   })
 );
 
+app.use((req, res, next) => { res.locals.theme = ''; next(); });
 app.use(sameOrigin);
 
 app.get('/health', (req, res) => res.json({ ok: true }));
@@ -58,6 +60,7 @@ app.use(dashboardRoutes);
 app.use(checkinRoutes);
 app.use(habitRoutes);
 app.use(pushRoutes);
+app.use(settingsRoutes);
 
 app.use((req, res) => res.status(404).send('Not found'));
 app.use((err, req, res, next) => {

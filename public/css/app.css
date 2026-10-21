@@ -19,24 +19,20 @@
   --shadow: 0 1px 2px rgba(31,34,48,.06), 0 8px 24px rgba(31,34,48,.06);
   color-scheme: light;
 }
+/* Dark: when the device is dark (unless Light was chosen), or when Dark was chosen. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #15141B;
-    --surface: #201E28;
-    --ink: #ECEAF2;
-    --muted: #A7A3B8;
-    --border: #3A3545;
-    --aqua-deep: #6FDCD1;
-    --lilac-tint: #2D2339;
-    --lilac-ring: #B996D6;
-    --lilac-ink: #E6D3F7;
-    --off: #2A2732;
-    --missed: #E08A55;
-    --missed-ink: #F2A97A;
-    --danger: #F08A5D;
-    --shadow: none;
-    color-scheme: dark;
+  :root:not([data-theme="light"]) {
+    --bg: #15141B; --surface: #201E28; --ink: #ECEAF2; --muted: #A7A3B8; --border: #3A3545;
+    --aqua-deep: #6FDCD1; --lilac-tint: #2D2339; --lilac-ring: #B996D6; --lilac-ink: #E6D3F7;
+    --off: #2A2732; --missed: #E08A55; --missed-ink: #F2A97A; --danger: #F08A5D;
+    --shadow: none; color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #15141B; --surface: #201E28; --ink: #ECEAF2; --muted: #A7A3B8; --border: #3A3545;
+  --aqua-deep: #6FDCD1; --lilac-tint: #2D2339; --lilac-ring: #B996D6; --lilac-ink: #E6D3F7;
+  --off: #2A2732; --missed: #E08A55; --missed-ink: #F2A97A; --danger: #F08A5D;
+  --shadow: none; color-scheme: dark;
 }
 
 /* ---------- Base ---------- */

@@ -157,3 +157,6 @@ a.icon-btn, button.icon-btn { color: var(--ink); }
 .day-link:hover { filter: brightness(0.95); }
 .day-link:active { transform: scale(0.92); }
 .day-link.day-off:hover, .day-link.day-missed:hover { background: var(--lilac-tint); }
+
+.topbar-actions { display: flex; align-items: center; gap: 2px; }
+.topbar-actions .icon-btn { color: var(--muted); }

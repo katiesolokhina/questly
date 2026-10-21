@@ -1,0 +1,34 @@
+.bar-spacer { width: 68px; }
+.settings { padding: 16px 16px 40px; display: flex; flex-direction: column; gap: 16px; }
+.small-14 { font-size: 14px; }
+
+.panel { background: var(--surface); border-radius: var(--radius); padding: 18px 16px; display: flex; flex-direction: column; gap: 12px; }
+.panel h2 { font-size: 18px; font-weight: 700; }
+.panel h3 { margin: 4px 0 0; font-size: 15px; font-weight: 600; }
+.stack-form { display: flex; flex-direction: column; gap: 14px; border-top: 1px solid var(--border); padding-top: 14px; }
+.stack-form .btn { align-self: flex-start; height: 48px; font-size: 16px; }
+
+.alert-ok { background: var(--aqua); color: var(--aqua-ink); }
+
+/* 3-option segmented control made of submit buttons */
+.segmented-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.seg-btn {
+  height: 40px; border: 0; border-radius: 10px; background: transparent;
+  font-size: 15px; font-weight: 600; color: var(--muted);
+}
+.seg-btn.seg-on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(31, 34, 48, .12); }
+
+.archived-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.archived-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--border); }
+.archived-list li:first-child { border-top: 0; }
+.archived-name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.archived-name svg { width: 18px; height: 18px; color: var(--muted); }
+.btn-outline {
+  height: 40px; padding: 0 14px; border-radius: 12px;
+  border: 1.5px solid var(--lilac-ring); background: var(--surface); color: var(--lilac-ink);
+  font-size: 15px; font-weight: 600;
+}
+.btn-outline-aqua {
+  align-self: flex-start; height: 48px; font-size: 16px;
+  background: var(--surface); color: var(--aqua-deep); border: 1.5px solid var(--aqua);
+}

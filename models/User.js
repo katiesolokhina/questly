@@ -6,8 +6,10 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     name: { type: String, required: true, trim: true },
     passwordHash: { type: String, required: true },
-    // "Today" is always computed in this zone, never in server time.
+    // IANA zone; "today" is always computed in this zone, never in server time.
     timezone: { type: String, default: 'America/Chicago' },
+    // Appearance: 'system' follows the device; 'light'/'dark' override it everywhere.
+    theme: { type: String, enum: ['system', 'light', 'dark'], default: 'system' },
   },
   { timestamps: true }
 );

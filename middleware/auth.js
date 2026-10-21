@@ -11,6 +11,7 @@ async function requireAuth(req, res, next) {
     if (!user) return req.session.destroy(() => res.redirect('/login'));
     req.user = user;
     res.locals.user = user;
+    res.locals.theme = user.theme && user.theme !== 'system' ? user.theme : '';
     next();
   } catch (err) {
     next(err);

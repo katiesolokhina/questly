@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en"<%- theme ? ` data-theme="${theme}"` : '' %>>
+<head>
+  <%- include('partials/head') %>
+  <link rel="stylesheet" href="/css/habit-form.css">
+  <link rel="stylesheet" href="/css/settings.css">
+  <title>Settings · Questly</title>
+</head>
+<body>
+<div class="form-page">
+  <header class="form-bar">
+    <a class="bar-link" href="/">Done</a>
+    <h1>Settings</h1>
+    <span class="bar-spacer" aria-hidden="true"></span>
+  </header>
+
+  <main class="settings">
+    <% if (saved) { %>
+      <p class="alert alert-ok" role="status"><%= saved %></p>
+    <% } %>
+
+    <!-- Account -->
+    <section class="panel" aria-labelledby="account-title">
+      <h2 id="account-title">Account</h2>
+      <p class="muted small-14">Signed in as <strong><%= user.email %></strong></p>
+
+      <form class="stack-form" method="post" action="/settings/password" novalidate>
+        <h3>Change password</h3>
+        <% if (pwErrors.form) { %><p class="alert" role="alert"><%= pwErrors.form %></p><% } %>
+        <div class="field">
+          <label for="currentPassword">Current password</label>
+          <input id="currentPassword" name="currentPassword" type="password" autocomplete="current-password" required
+            <%- pwErrors.currentPassword ? 'aria-invalid="true" aria-describedby="cur-err"' : '' %>>
+          <% if (pwErrors.currentPassword) { %><span class="field-error" id="cur-err"><%= pwErrors.currentPassword %></span><% } %>
+        </div>
+        <div class="field">
+          <label for="newPassword">New password</label>
+          <input id="newPassword" name="newPassword" type="password" autocomplete="new-password" minlength="8" required
+            <%- pwErrors.newPassword ? 'aria-invalid="true" aria-describedby="new-err"' : 'aria-describedby="new-hint"' %>>
+          <% if (pwErrors.newPassword) { %><span class="field-error" id="new-err"><%= pwErrors.newPassword %></span><% } else { %>
+            <span class="hint" id="new-hint">At least 8 characters. A short phrase works well.</span>
+          <% } %>
+        </div>
+        <div class="field">
+          <label for="confirmPassword">Confirm new password</label>
+          <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required
+            <%- pwErrors.confirmPassword ? 'aria-invalid="true" aria-describedby="conf-err"' : '' %>>
+          <% if (pwErrors.confirmPassword) { %><span class="field-error" id="conf-err"><%= pwErrors.confirmPassword %></span><% } %>
+        </div>
+        <button class="btn btn-primary" type="submit">Change password</button>
+        <p class="hint">This signs you out on all your other devices.</p>
+      </form>
+    </section>
+
+    <!-- Appearance -->
+    <section class="panel" aria-labelledby="look-title">
+      <h2 id="look-title">Appearance</h2>
+      <form method="post" action="/settings/theme">
+        <div class="segmented segmented-3" role="group" aria-label="Theme">
+          <% [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']].forEach(([value, label]) => { %>
+            <button type="submit" name="theme" value="<%= value %>" aria-pressed="<%= user.theme === value %>"
+              class="seg-btn<%= user.theme === value ? ' seg-on' : '' %>"><%= label %></button>
+          <% }) %>
+        </div>
+      </form>
+      <p class="hint">System follows your phone or computer setting.</p>
+    </section>
+
+    <!-- Archived habits -->
+    <section class="panel" aria-labelledby="archived-title">
+      <h2 id="archived-title">Archived habits</h2>
+      <% if (!archived.length) { %>
+        <p class="muted small-14">Nothing archived. Habits you archive show up here, with their history kept.</p>
+      <% } else { %>
+        <ul class="archived-list">
+          <% archived.forEach((h) => { %>
+            <li>
+              <span class="archived-name">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="<%= icons[h.icon] %>"/></svg>
+                <%= h.name %>
+              </span>
+              <form method="post" action="/settings/habits/<%= h._id %>/restore">
+                <button class="btn-outline" type="submit">Restore<span class="sr-only"> <%= h.name %></span></button>
+              </form>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </section>
+
+    <!-- Export -->
+    <section class="panel" aria-labelledby="export-title">
+      <h2 id="export-title">Export</h2>
+      <p class="muted small-14">Every habit, every day since it started: done, missed, or off, and how each was logged. Opens in Excel or Google Sheets.</p>
+      <a class="btn btn-outline-aqua" href="/settings/export.csv" download>Download CSV</a>
+    </section>
+  </main>
+</div>
+</body>
+</html>
