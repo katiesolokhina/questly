@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="/css/settings.css">
   <script src="/js/habit-form.js" defer></script>
   <script src="/js/share-link.js" defer></script>
+  <script src="/js/push-setup.js" defer></script>
   <title>Settings · Questly</title>
 </head>
 <body>
@@ -52,6 +53,32 @@
         <button class="btn btn-primary" type="submit">Change password</button>
         <p class="hint">This signs you out on all your other devices.</p>
       </form>
+    </section>
+
+    <!-- Notifications -->
+    <section class="panel" id="notifications" aria-labelledby="notif-title">
+      <h2 id="notif-title">Notifications</h2>
+      <div id="push-card" hidden aria-live="polite">
+        <div data-state="off" hidden>
+          <p class="push-title">Reminders are off on this device</p>
+          <p class="small-14 muted">Questly nudges you at each habit's reminder time, only if you haven't checked in. Set the time in each habit's settings.</p>
+          <button class="btn-outline" type="button" data-action="enable">Turn on reminders</button>
+        </div>
+        <div data-state="on" hidden>
+          <p class="push-title">Reminders are on for this device</p>
+          <p class="small-14 muted">Each phone or computer is set up separately.</p>
+          <div class="push-actions">
+            <button class="link-btn" type="button" data-action="test">Send a test</button>
+            <button class="link-btn link-btn-danger" type="button" data-action="disable">Turn off</button>
+          </div>
+        </div>
+        <div data-state="blocked" hidden>
+          <p class="push-title">Notifications are blocked</p>
+          <p class="small-14 muted">Questly isn't allowed to notify you on this device. Allow notifications for Questly (or your browser) in your phone's or computer's settings, then reopen the app.</p>
+        </div>
+        <p class="small-14 muted" data-status></p>
+      </div>
+      <noscript><p class="small-14 muted">Reminders need JavaScript turned on.</p></noscript>
     </section>
 
     <!-- Appearance -->

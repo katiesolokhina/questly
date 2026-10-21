@@ -53,3 +53,15 @@
 .member-info .small-14 { overflow-wrap: anywhere; }
 .member-actions { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .badge-off { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 10px; background: var(--off); color: var(--muted); font-size: 12px; font-weight: 600; }
+
+/* Notifications */
+#push-card[hidden], #push-card [hidden] { display: none !important; }
+#push-card [data-state] { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.push-title { font-size: 16px; font-weight: 600; }
+.push-actions { display: flex; gap: 4px; margin-left: -12px; }
+.link-btn {
+  height: 44px; padding: 0 12px; border: 0; background: transparent;
+  color: var(--muted); font-size: 15px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px;
+}
+.link-btn-danger { color: var(--danger); }
+#push-card [data-status]:empty { display: none; }

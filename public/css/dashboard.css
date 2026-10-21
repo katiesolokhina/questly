@@ -140,18 +140,6 @@ a.icon-btn, button.icon-btn { color: var(--ink); }
 .empty { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
 .empty h1 { font-size: 22px; }
 
-/* Reminders-on-this-device card */
-.push-card {
-  background: var(--surface); border-radius: var(--radius); padding: 14px 16px;
-  display: flex; flex-direction: column; gap: 6px;
-}
-.push-card [data-state] { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
-.push-card[hidden], .push-card [hidden] { display: none !important; }
-.push-title { font-size: 16px; font-weight: 600; }
-.push-actions { display: flex; gap: 4px; margin-left: -12px; }
-.push-card .btn-outline { margin-top: 4px; }
-.push-card [data-status]:empty { display: none; }
-
 /* Past days are tappable */
 .day-link { text-decoration: none; cursor: pointer; transition: transform .08s ease; }
 .day-link:hover { filter: brightness(0.95); }
@@ -178,3 +166,17 @@ a.icon-btn, button.icon-btn { color: var(--ink); }
 .day.has-note::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; border-radius: 50%; background: var(--lilac-ink); }
 .day-done.has-note::after, .day-today-done.has-note::after { background: var(--aqua-ink); }
 .key-note { width: 5px; height: 5px; background: var(--lilac-ink); }
+
+/* Header bell: which icon shows depends on state */
+.bell { position: relative; }
+.bell[hidden] { display: none; }
+.bell .bell-on, .bell .bell-off { width: 22px; height: 22px; }
+.bell .bell-on { display: none; }
+.bell[data-state="on"] .bell-on { display: block; }
+.bell[data-state="on"] .bell-off { display: none; }
+.bell[data-state="on"]::after {
+  content: ''; position: absolute; top: 10px; right: 10px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--aqua); box-shadow: 0 0 0 2px var(--bg);
+}
+.bell:disabled { opacity: .5; }
