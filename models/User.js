@@ -18,6 +18,12 @@ const userSchema = new mongoose.Schema(
     // Sunday 7 PM summary push. weeklySentFor = the Sunday it last went out (once per week).
     weeklySummary: { type: Boolean, default: true },
     weeklySentFor: { type: String },
+    // Pollen location (optional). Rounded to 2 decimals (~1 km); never a street address.
+    pollen: {
+      label: { type: String, trim: true, maxlength: 80 },
+      lat: { type: Number, min: -90, max: 90 },
+      lng: { type: Number, min: -180, max: 180 },
+    },
   },
   { timestamps: true }
 );

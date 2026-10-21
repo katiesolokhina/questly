@@ -68,4 +68,12 @@
 
 /* Weekly summary */
 .weekly-setting { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
-.weekly-setting .btn-outline { flex-shrink: 0; }
+.weekly-setting .btn-outline { flex-shrink: 0; white-space: nowrap; }
+.weekly-setting a { color: var(--aqua-deep); font-weight: 600; text-underline-offset: 3px; }
+
+/* Pollen */
+.pollen-form .field input { height: 48px; padding: 0 14px; width: 100%; border: 1.5px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; }
+.pollen-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.pollen-actions .btn { height: 48px; font-size: 16px; }
+.pollen-actions .btn-outline { height: 48px; }
+.pollen-current { border-top: 0; padding-top: 0; }

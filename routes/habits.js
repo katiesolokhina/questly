@@ -19,7 +19,7 @@ const EMPTY = {
   supplyOn: false, supplyLeft: '', supplySize: '30', supplyPer: '1', supplyUnit: 'doses', supplyWarn: '7', supplyUrl: '',
   goalOn: false, goalLabel: '', goalTarget: '', goalUnit: 'days', goalPer: '1', goalFrom: '',
   ratingOn: false, ratingQuestion: '', ratingLabels: ['', '', '', '', ''], ratingDir: '',
-  milestonesOn: true,
+  milestonesOn: true, showPollen: null,
 };
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -86,7 +86,7 @@ function parseForm(body, today) {
   const ratingQuestion = str('ratingQuestion');
   const ratingLabels = [1, 2, 3, 4, 5].map((i) => str(`ratingLabel${i}`));
   const ratingDir = ['low', 'high'].includes(body.ratingDir) ? body.ratingDir : (defaultsFor(kind).lowIsGood ? 'low' : 'high');
-  Object.assign(counters, { ratingOn, ratingQuestion, ratingLabels, ratingDir, milestonesOn: body.milestonesOn === 'on' });
+  Object.assign(counters, { ratingOn, ratingQuestion, ratingLabels, ratingDir, milestonesOn: body.milestonesOn === 'on', showPollen: body.showPollen === 'on' });
 
   const errors = {};
   if (ratingQuestion.length > 80) errors.ratingQuestion = 'Keep it to 80 characters or fewer.';
@@ -154,7 +154,7 @@ function counterDoc(v, nums, { habit, rows, today }) {
   }
   // Rating: settings are kept when it's turned off, so turning it back on restores them.
   const rating = { enabled: v.ratingOn, question: v.ratingQuestion, labels: v.ratingLabels, lowIsGood: v.ratingDir === 'low' };
-  return { supply, goal, rating, milestones: { ...(old.milestones || {}), enabled: v.milestonesOn } };
+  return { supply, goal, rating, milestones: { ...(old.milestones || {}), enabled: v.milestonesOn }, showPollen: v.showPollen };
 }
 
 function toDoc(v) {
@@ -172,7 +172,11 @@ function toDoc(v) {
 
 function render(res, { mode, habitId = null, values, errors = {}, today }) {
   res.status(Object.keys(errors).length ? 422 : 200).render('habit-form', {
-    mode, habitId, values: { ...values, ratingDir: values.ratingDir || (defaultsFor(values.kind).lowIsGood ? 'low' : 'high') },
+    mode, habitId, values: {
+      ...values,
+      ratingDir: values.ratingDir || (defaultsFor(values.kind).lowIsGood ? 'low' : 'high'),
+      showPollen: values.showPollen ?? values.kind === 'medication',
+    },
     errors, today, icons, DAY_SHORT, DAY_FULL, ratingDefaults: RATING_DEFAULTS,
   });
 }
@@ -201,6 +205,7 @@ async function counterValues(habit, today) {
     goalPer: String(g.perCheckin ?? 1),
     goalFrom: g.from || habit.startDate,
     milestonesOn: !habit.milestones || habit.milestones.enabled !== false,
+    showPollen: habit.showPollen ?? habit.kind === 'medication',
     ratingOn: Boolean(habit.rating && habit.rating.enabled),
     ratingQuestion: (habit.rating && habit.rating.question) || '',
     ratingLabels: [0, 1, 2, 3, 4].map((i) => (habit.rating && habit.rating.labels && habit.rating.labels[i]) || ''),

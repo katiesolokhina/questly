@@ -16,7 +16,7 @@ async function startDatabase(name) {
   return { uri: server.getUri(name), stop: () => server.stop() };
 }
 
-async function startApp({ name, port, seed }) {
+async function startApp({ name, port, seed, env = {} }) {
   const db = await startDatabase(name);
   await mongoose.connect(db.uri);
   await mongoose.connection.db.dropDatabase();
@@ -37,6 +37,8 @@ async function startApp({ name, port, seed }) {
       VAPID_PUBLIC_KEY: '',    // push off
       VAPID_PRIVATE_KEY: '',
       VAPID_SUBJECT: '',
+      POLLEN_API_KEY: '',      // pollen off unless a test turns it on (against a local stub)
+      ...env,
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });

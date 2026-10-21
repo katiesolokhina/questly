@@ -10,6 +10,11 @@
     <% } else { %>
       <div class="trend-chart" role="img" aria-label="<%= t.summary %>">
         <div class="trend-bars" style="grid-template-columns: repeat(<%= t.bars.length %>, minmax(0, 1fr))">
+          <% if (t.hasPollen) { %>
+            <svg class="trend-pollen" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <% t.pollenLines.forEach((pts) => { %><polyline points="<%= pts %>" vector-effect="non-scaling-stroke"/><% }) %>
+            </svg>
+          <% } %>
           <% t.bars.forEach((b) => { %>
             <span class="trend-bar<%= b.score ? ' lvl-' + b.level : '' %>" style="height: <%= b.height %>%" title="<%= b.title %>"></span>
           <% }) %>
@@ -23,6 +28,7 @@
         <li><span class="trend-key lvl-5"></span>Best: <%= t.best %></li>
         <li><span class="trend-key lvl-1"></span>Worst: <%= t.worst %></li>
         <li><span class="trend-key-dot"></span>Done</li>
+        <% if (t.hasPollen) { %><li><span class="trend-key-line"></span>Pollen</li><% } %>
       </ul>
       <% if (t.findings.length) { %>
         <div class="trend-findings">

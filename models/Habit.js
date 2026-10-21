@@ -68,6 +68,8 @@ const habitSchema = new mongoose.Schema(
       labels: { type: [{ type: String, trim: true, maxlength: 16 }], default: undefined },
       lowIsGood: { type: Boolean },
     },
+    // Show pollen on this habit (chip + chart line). Unset = on for medications, off for habits.
+    showPollen: { type: Boolean },
     // Milestones: badge levels already celebrated, so each celebration shows once.
     // `seen` stays unset until first computed; existing badges are then marked seen silently.
     milestones: {

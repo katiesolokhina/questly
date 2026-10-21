@@ -1,5 +1,19 @@
 <%# Supply countdown and goal progress. Rendered only for habits that turned them on. %>
 <% const fmt = (n) => Number(n).toLocaleString('en-US'); %>
+<% if (typeof pollenToday !== 'undefined' && pollenToday) { %>
+  <section class="pollen-card" aria-labelledby="pollen-title">
+    <div class="pollen-main">
+      <span class="pollen-dot pl-<%= pollenToday.value %>" aria-hidden="true"></span>
+      <div>
+        <h2 class="counter-kicker" id="pollen-title">Pollen today<% if (pollenToday.place) { %> · <%= pollenToday.place %><% } %></h2>
+        <p class="pollen-level"><%= pollenToday.level %><% if (pollenToday.top) { %> <span class="muted">· <%= pollenToday.top %></span><% } %></p>
+      </div>
+    </div>
+    <ul class="pollen-types">
+      <% pollenToday.types.forEach((t) => { %><li><span class="pollen-mini pl-<%= t.value %>" aria-hidden="true"></span><%= t.name %> <span class="muted"><%= t.level.toLowerCase() %></span></li><% }) %>
+    </ul>
+  </section>
+<% } %>
 <% if (supply) { %>
   <section class="counter-card<%= supply.low ? ' counter-low' : '' %>" aria-labelledby="supply-title">
     <div class="counter-head">

@@ -8,6 +8,7 @@ const AccessToken = require('../models/AccessToken');
 const icons = require('../lib/icons');
 const { buildCsv } = require('../lib/export');
 const { localToday } = require('../lib/dates');
+const pollen = require('../lib/pollen');
 
 const router = express.Router();
 router.use('/settings', requireAuth);
@@ -23,6 +24,8 @@ const SAVED = {
   removed: 'Account deleted.',
   weeklyOn: 'Weekly summary turned on.',
   weeklyOff: 'Weekly summary turned off.',
+  pollenOn: 'Pollen location saved.',
+  pollenOff: 'Pollen turned off.',
 };
 
 async function renderSettings(req, res, extra = {}) {
@@ -45,6 +48,9 @@ async function renderSettings(req, res, extra = {}) {
     icons,
     saved: Object.hasOwn(SAVED, req.query.saved || '') ? SAVED[req.query.saved] : null,
     pwErrors: {},
+    pollenAvailable: pollen.configured(),
+    pollenError: null,
+    pollenQuery: '',
     ...extra,
   });
 }
@@ -119,6 +125,43 @@ router.post('/settings/weekly', async (req, res, next) => {
     const on = req.body.weekly === 'on';
     await User.updateOne({ _id: req.user._id }, { $set: { weeklySummary: on } });
     res.redirect(`/settings?saved=${on ? 'weeklyOn' : 'weeklyOff'}#notifications`);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ---------- Pollen location ----------
+// From "Use my location" (lat/lng, already rounded in the browser) or a typed city / ZIP code.
+router.post('/settings/pollen', async (req, res, next) => {
+  try {
+    const lat = Number(req.body.lat);
+    const lng = Number(req.body.lng);
+    const place = String(req.body.place || '').trim().slice(0, 80);
+    let loc = null;
+    if (req.body.lat && req.body.lng && Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+      loc = { label: 'Your location', lat: pollen.round(lat), lng: pollen.round(lng) };
+    } else if (place.length >= 2) {
+      try {
+        loc = await pollen.geocode(place);
+      } catch (err) {
+        console.warn('Geocoding failed:', err.message);
+        return renderSettings(req, res, { status: 503, pollenError: 'Couldn’t look that up right now. Try again in a minute.', pollenQuery: place });
+      }
+      if (!loc) return renderSettings(req, res, { status: 422, pollenError: 'Couldn’t find that place. Try “City, State” or a ZIP code.', pollenQuery: place });
+    } else {
+      return renderSettings(req, res, { status: 422, pollenError: 'Type a city or ZIP code.', pollenQuery: place });
+    }
+    await User.updateOne({ _id: req.user._id }, { $set: { pollen: loc } });
+    res.redirect('/settings?saved=pollenOn#pollen');
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/settings/pollen/off', async (req, res, next) => {
+  try {
+    await User.updateOne({ _id: req.user._id }, { $unset: { pollen: 1 } });
+    res.redirect('/settings?saved=pollenOff#pollen');
   } catch (err) {
     next(err);
   }

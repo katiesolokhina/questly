@@ -59,3 +59,12 @@
     <input class="switch" type="checkbox" id="milestonesOn" name="milestonesOn" <%= values.milestonesOn ? 'checked' : '' %>>
   </label>
 </fieldset>
+
+<fieldset class="group">
+  <legend>Pollen</legend>
+  <label class="switch-row" for="showPollen">
+    <span>Show today's pollen and a pollen line on the rating chart</span>
+    <input class="switch" type="checkbox" id="showPollen" name="showPollen" <%= values.showPollen ? 'checked' : '' %>>
+  </label>
+  <p class="hint"><% if (user.pollen && user.pollen.lat != null) { %>Using <%= user.pollen.label %>. <% } else { %>Set your location in <a href="/settings#pollen">Settings</a> first. <% } %>Only you see it.</p>
+</fieldset>

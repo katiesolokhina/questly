@@ -1,0 +1,36 @@
+<%# Pollen location (Settings). Locals: user, pollenError, pollenQuery, pollenAvailable %>
+<section class="panel" id="pollen" aria-labelledby="pollen-title">
+  <h2 id="pollen-title">Pollen</h2>
+  <% if (!pollenAvailable) { %>
+    <p class="small-14 muted">Pollen isn't set up on this server yet.</p>
+  <% } else { %>
+    <% if (user.pollen && user.pollen.lat != null) { %>
+      <div class="weekly-setting pollen-current">
+        <div>
+          <p class="push-title"><%= user.pollen.label %></p>
+          <p class="small-14 muted">Daily tree, grass and weed pollen for your medication habits.</p>
+        </div>
+        <form method="post" action="/settings/pollen/off">
+          <button class="btn-outline" type="submit" aria-label="Turn off pollen">Turn off</button>
+        </form>
+      </div>
+    <% } else { %>
+      <p class="small-14 muted">See daily pollen next to your symptoms. Only your city is saved, rounded to about 1 km.</p>
+    <% } %>
+    <form class="stack-form pollen-form" method="post" action="/settings/pollen" novalidate>
+      <div class="field">
+        <label for="place"><%= user.pollen && user.pollen.lat != null ? 'Change location' : 'City or ZIP code' %></label>
+        <input id="place" name="place" type="text" maxlength="80" autocomplete="address-level2" placeholder="e.g. Dallas, TX" value="<%= pollenQuery || '' %>"
+          <%- pollenError ? 'aria-invalid="true" aria-describedby="place-err"' : '' %>>
+        <% if (pollenError) { %><span class="field-error" id="place-err"><%= pollenError %></span><% } %>
+      </div>
+      <input type="hidden" name="lat" value="">
+      <input type="hidden" name="lng" value="">
+      <div class="pollen-actions">
+        <button class="btn btn-primary" type="submit">Save</button>
+        <button class="btn-outline" type="button" id="use-location" hidden>Use my location</button>
+      </div>
+      <p class="small-14 muted" id="location-status" role="status"></p>
+    </form>
+  <% } %>
+</section>

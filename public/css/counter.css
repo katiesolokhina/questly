@@ -26,3 +26,16 @@
   border: 1.5px solid var(--border); border-radius: 12px;
   background: var(--surface); color: var(--ink); font: inherit; font-size: 16px;
 }
+
+/* Pollen today (UPI 0 none … 5 very high) */
+.pollen-card { background: var(--surface); border-radius: var(--radius); padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+.pollen-main { display: flex; align-items: center; gap: 12px; }
+.pollen-dot { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; }
+.pollen-level { font-size: 18px; font-weight: 700; }
+.pollen-level .muted { font-size: 15px; font-weight: 500; }
+.pollen-types { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
+.pollen-types li { display: flex; align-items: center; gap: 5px; }
+.pollen-mini { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.pl-0 { background: var(--off); box-shadow: inset 0 0 0 1px var(--border); }
+.pl-1 { background: #9FE3DA; } .pl-2 { background: #C6E59B; } .pl-3 { background: #FFD27A; }
+.pl-4 { background: #E08A55; } .pl-5 { background: #C25E2A; }
