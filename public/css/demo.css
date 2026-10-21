@@ -1,0 +1,7 @@
+/* Demo banner (dashboard) */
+.demo-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 6px 10px 14px; border-radius: 14px; background: var(--lilac-tint); color: var(--lilac-ink); font-size: 14px; }
+.demo-banner .link-btn { min-height: 40px; white-space: nowrap; color: var(--lilac-ink); }
+/* "Try the demo" (login page) */
+.demo-form { width: 100%; max-width: 400px; margin: 16px auto 0; display: flex; flex-direction: column; gap: 6px; text-align: center; }
+.demo-form .btn-demo { height: 52px; width: 100%; border-radius: 14px; border: 1.5px solid var(--lilac-ring); background: var(--surface); color: var(--lilac-ink); font-size: 17px; font-weight: 700; }
+.demo-form .hint { margin: 0; font-size: 13px; color: var(--muted); }

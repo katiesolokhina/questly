@@ -1,7 +1,9 @@
 <%# Pollen location (Settings). Locals: user, pollenError, pollenQuery, pollenAvailable %>
 <section class="panel" id="pollen" aria-labelledby="pollen-title">
   <h2 id="pollen-title">Pollen</h2>
-  <% if (!pollenAvailable) { %>
+  <% if (user.demo) { %>
+    <p class="small-14 muted">The demo uses sample pollen data, so there's no location to set.</p>
+  <% } else if (!pollenAvailable) { %>
     <p class="small-14 muted">Pollen isn't set up on this server yet.</p>
   <% } else { %>
     <% if (user.pollen && user.pollen.lat != null) { %>

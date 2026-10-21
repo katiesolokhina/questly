@@ -17,6 +17,9 @@ const userSchema = new mongoose.Schema(
     invitedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     // Sunday 7 PM summary push. weeklySentFor = the Sunday it last went out (once per week).
     weeklySummary: { type: Boolean, default: true },
+    // Throwaway demo account ("Try the demo"): sample data, no external APIs, deleted at demoExpiresAt.
+    demo: { type: Boolean, default: false },
+    demoExpiresAt: { type: Date },
     weeklySentFor: { type: String },
     // Pollen location (optional). Rounded to 2 decimals (~1 km); never a street address.
     pollen: {

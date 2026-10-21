@@ -1,0 +1,7 @@
+<%# Shown on the dashboard for demo accounts. Local: user %>
+<% if (user && user.demo) { const hrs = Math.max(1, Math.ceil((new Date(user.demoExpiresAt) - Date.now()) / 3600000)); %>
+  <div class="demo-banner" role="note">
+    <p><strong>Demo</strong> · Your own private copy with sample data. Click anything. It’s deleted in about <%= hrs %> hour<%= hrs === 1 ? '' : 's' %>.</p>
+    <form method="post" action="/demo"><button class="link-btn" type="submit">Start over</button></form>
+  </div>
+<% } %>

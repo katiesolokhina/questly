@@ -1,4 +1,7 @@
 <%# Weekly summary on/off (account-wide, every device with reminders on). Local: user %>
+<% if (user.demo) { %>
+<div class="weekly-setting"><p class="small-14 muted">The weekly summary push is off in the demo. <a href="/week">See this week</a></p></div>
+<% } else { %>
 <div class="weekly-setting">
   <div>
     <p class="push-title">Weekly summary</p>
@@ -9,3 +12,4 @@
     <button class="btn-outline" type="submit" aria-label="<%= user.weeklySummary === false ? 'Turn on weekly summary' : 'Turn off weekly summary' %>"><%= user.weeklySummary === false ? 'Turn on' : 'Turn off' %></button>
   </form>
 </div>
+<% } %>

@@ -26,6 +26,9 @@
     <!-- Account -->
     <section class="panel" aria-labelledby="account-title">
       <h2 id="account-title">Account</h2>
+      <% if (user.demo) { %>
+  <p class="muted small-14">You're in the demo. Password changes are turned off, and this copy is deleted after 24 hours.</p>
+<% } else { %>
       <p class="muted small-14">Signed in as <strong><%= user.email %></strong></p>
 
       <form class="stack-form" method="post" action="/settings/password" novalidate>
@@ -54,6 +57,7 @@
         <button class="btn btn-primary" type="submit">Change password</button>
         <p class="hint">This signs you out on all your other devices.</p>
       </form>
+      <% } %>
     </section>
 
     <!-- Notifications -->

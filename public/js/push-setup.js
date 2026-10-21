@@ -122,5 +122,13 @@
     });
   }
 
-  refresh().catch((err) => console.warn('Push setup failed:', err));
+  (async () => {
+    // Demo accounts: notifications are off; say so in Settings, keep the bell hidden.
+    const probe = await fetch('/api/push/key', { credentials: 'same-origin' });
+    if (probe.status === 403) {
+      if (card) { card.hidden = false; say('Notifications are off in the demo.'); }
+      return;
+    }
+    await refresh();
+  })().catch((err) => console.warn('Push setup failed:', err));
 })();

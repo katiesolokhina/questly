@@ -35,7 +35,7 @@ async function renderSettings(req, res, extra = {}) {
   let family = null;
   if (req.user.role === 'admin') {
     const [members, invites] = await Promise.all([
-      User.find({ _id: { $ne: req.user._id } }, { name: 1, email: 1, disabled: 1, createdAt: 1 }).sort({ createdAt: 1 }).lean(),
+      User.find({ _id: { $ne: req.user._id }, demo: { $ne: true } }, { name: 1, email: 1, disabled: 1, createdAt: 1 }).sort({ createdAt: 1 }).lean(),
       AccessToken.find({ kind: 'invite', usedAt: null, expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 }).lean(),
     ]);
     family = { members, invites, link: req.session.flashLink || null };
@@ -75,6 +75,7 @@ const passwordLimiter = rateLimit({
 
 router.post('/settings/password', passwordLimiter, async (req, res, next) => {
   try {
+    if (req.user.demo) return res.status(403).send('Not available in the demo.');
     const current = String(req.body.currentPassword || '');
     const next1 = String(req.body.newPassword || '');
     const next2 = String(req.body.confirmPassword || '');
@@ -134,6 +135,7 @@ router.post('/settings/weekly', async (req, res, next) => {
 // From "Use my location" (lat/lng, already rounded in the browser) or a typed city / ZIP code.
 router.post('/settings/pollen', async (req, res, next) => {
   try {
+    if (req.user.demo) return res.status(403).send('Not available in the demo.');
     const lat = Number(req.body.lat);
     const lng = Number(req.body.lng);
     const place = String(req.body.place || '').trim().slice(0, 80);
@@ -160,6 +162,7 @@ router.post('/settings/pollen', async (req, res, next) => {
 
 router.post('/settings/pollen/off', async (req, res, next) => {
   try {
+    if (req.user.demo) return res.status(403).send('Not available in the demo.');
     await User.updateOne({ _id: req.user._id }, { $unset: { pollen: 1 } });
     res.redirect('/settings?saved=pollenOff#pollen');
   } catch (err) {

@@ -41,7 +41,7 @@ router.post('/habits/:id/checkin', requireAuth, async (req, res, next) => {
     // Only a brand-new check-in gets a message, and failures here never undo the check-in.
     if (result.upsertedCount) {
       try {
-        const message = await messageForCheckin(req.user._id, today);
+        const message = await messageForCheckin(req.user._id, today, { offline: Boolean(req.user.demo) });
         await Checkin.updateOne({ habitId: habit._id, date: today }, { $set: { message } });
       } catch (err) {
         console.warn('Could not attach message:', err.message);

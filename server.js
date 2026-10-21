@@ -18,6 +18,8 @@ const accessRoutes = require('./routes/access');
 const familyRoutes = require('./routes/family');
 const weekRoutes = require('./routes/week');
 const goRoutes = require('./routes/go');
+const demoRoutes = require('./routes/demo');
+const { startDemoCleanup } = require('./lib/demo');
 
 if (!process.env.SESSION_SECRET) {
   console.error('SESSION_SECRET is not set');
@@ -69,6 +71,7 @@ app.use(settingsRoutes);
 app.use(familyRoutes);
 app.use(weekRoutes);
 app.use(goRoutes);
+app.use(demoRoutes);
 
 app.use((req, res) => res.status(404).send('Not found'));
 app.use((err, req, res, next) => {
@@ -81,6 +84,7 @@ connectDB(process.env.MONGODB_URI)
   .then(() => {
     app.listen(PORT, () => console.log(`Questly on http://localhost:${PORT}`));
     if (configurePush()) startReminders();
+    startDemoCleanup(); // deletes expired "Try the demo" accounts every 30 minutes
   })
   .catch((err) => {
     console.error('Startup failed:', err.message);

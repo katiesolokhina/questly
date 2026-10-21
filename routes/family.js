@@ -27,7 +27,7 @@ function linkFor(kind, raw) {
 async function member(req) {
   if (!mongoose.isValidObjectId(req.params.id)) return null;
   if (req.params.id === req.user.id) return null;
-  return User.findById(req.params.id);
+  return User.findOne({ _id: req.params.id, demo: { $ne: true } }); // demo accounts aren't family members
 }
 
 // ---------- Invites ----------

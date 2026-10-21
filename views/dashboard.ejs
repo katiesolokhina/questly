@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="/css/counter.css">
   <link rel="stylesheet" href="/css/rating.css">
   <link rel="stylesheet" href="/css/milestones.css">
+  <link rel="stylesheet" href="/css/demo.css">
   <script src="/js/push-setup.js" defer></script>
   <title><%= habit ? habit.name + ' · ' : '' %>Questly</title>
 </head>
@@ -46,6 +47,7 @@
     </a>
   </nav>
 
+  <%- include('partials/demo-banner') %>
 <% if (!habit) { %>
   <main class="empty card">
     <h1>No habits yet</h1>

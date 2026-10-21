@@ -5,6 +5,8 @@ const { sendToUser, isPushConfigured } = require('../lib/push');
 
 const router = express.Router();
 router.use('/api/push', requireAuth);
+// Demo accounts never get push (the page shows "off in the demo" instead).
+router.use('/api/push', (req, res, next) => (req.user.demo ? res.status(403).json({ error: 'demo' }) : next()));
 
 // Public VAPID key the browser needs to subscribe.
 router.get('/api/push/key', (req, res) => {
