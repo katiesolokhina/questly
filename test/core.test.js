@@ -439,6 +439,25 @@ test('core flows', async (t) => {
     assert.match((await c('/settings')).text, /Turn off weekly summary/);
   });
 
+  // ---------- Home-screen shortcuts ----------
+  await t.test('shortcuts: check-in opens a habit still due today; note opens today\'s note; never checks in by itself', async () => {
+    const before = await withDb(app.uri, () => Checkin.countDocuments({}));
+    let r = await c('/go/checkin');
+    assert.equal(r.status, 302);
+    const first = r.location.match(/^\/\?h=([a-f0-9]{24})$/)[1];
+    assert.equal(await withDb(app.uri, () => Checkin.countDocuments({})), before, 'opening a shortcut changes nothing');
+    const wasDone = await withDb(app.uri, () => Checkin.exists({ habitId: first, date: today }));
+    if (!wasDone) {
+      await c(`/habits/${first}/checkin`, { method: 'POST', form: {} });
+      r = await c('/go/checkin');
+      assert.notEqual(r.location, `/?h=${first}`, 'moves on to the next habit still due');
+      await c(`/habits/${first}/checkin/undo`, { method: 'POST', form: {} });
+    }
+    r = await c('/go/note');
+    assert.match(r.location, new RegExp(`^/habits/[a-f0-9]{24}/day/${today}#note$`));
+    assert.equal((await client(app.base)('/go/checkin')).location, '/login');
+  });
+
   await t.test('habits without counters show no counter cards', async () => {
     assert.doesNotMatch((await c(`/?h=${h}`)).text, /counter-card/);
   });
