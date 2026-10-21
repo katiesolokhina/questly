@@ -23,6 +23,7 @@ Built by [Katie Solokhina](https://katie.trisolocreations.com).
 - **Goal:** a count-up target, such as "87 of 1,095 days" or "60 of 100 pages", with a projected finish date.
 - **Daily rating:** a 1–5 question with your own wording and labels, and a monthly trend chart. It also tells you things like "Done days averaged 1.8, missed days 3.2."
 - **Milestones:** badges at 7, 30, 60, 100, 180 and 365 days and beyond, each with a celebration that shows exactly once.
+- **Pollen:** today's tree, grass and weed levels for your city, and a pollen line on the rating chart. It answers "is it the medication or the season?" with findings like "Higher-pollen days averaged 3.2, low-pollen days 1.9." It's on by default for medications.
 
 **Around the app**
 - **Weekly summary:** a page showing each habit Mon–Sun, plus a push every Sunday at 7 PM.
@@ -40,6 +41,7 @@ Built by [Katie Solokhina](https://katie.trisolocreations.com).
 | Sessions | express-session + connect-mongo |
 | Security | helmet (CSP, no inline scripts), express-rate-limit, bcrypt |
 | Push | Web Push (VAPID) via `web-push` |
+| External data | [Google Pollen API](https://developers.google.com/maps/documentation/pollen), [Open-Meteo geocoding](https://open-meteo.com) (free, no key), [API Ninjas](https://api-ninjas.com) |
 | PWA | Web app manifest, service worker, offline page |
 | Hosting | Ubuntu VPS, Nginx reverse proxy, PM2, Let's Encrypt |
 | Tests | Node's built-in test runner, against the real server and a throwaway database |
@@ -51,6 +53,8 @@ There's no frontend framework and no build step: pages work without JavaScript, 
 - **Dates are local calendar strings** (`YYYY-MM-DD`), computed in each user's time zone. Date arithmetic runs on UTC midnights, so daylight-saving changes can never skip or repeat a day. "Today" is never the server's today.
 - **Counters are derived, never decremented.** Supply left = amount at the last refill minus the check-ins since then. That's why undo, backfill and past-day fixes always give the right number, and it can't drift.
 - **Exactly-once side effects come from atomic database claims, not timers.** Reminders, low-supply alerts, the weekly push and milestone celebrations each claim their slot with a conditional update or a unique index *before* acting. A restart, two overlapping ticks or a page reload can never send or show anything twice.
+- **Paid APIs can't run up a bill.** Pollen is fetched once per place per day (today + a 4-day forecast, saved), pre-fetched at 6 AM so pages never wait, and backs off for 30 minutes after a failure. A hard daily cap is claimed atomically in the database before every call, and the key is restricted to one API and the server's IP. Tests run against a local stub, so the real API is never called.
+- **Location stays coarse.** Pollen needs only a city, so coordinates are rounded to about 1 km and no street address is ever stored.
 - **CSRF protection** combines SameSite=Lax cookies with an `Origin` check on every state-changing request. Links (including home-screen shortcuts) only ever navigate; changing data always takes a POST.
 - **Invite and reset links** are random tokens stored only as SHA-256 hashes. They're single-use (claimed atomically) and expire.
 - **Privacy between family members:** an admin manages *accounts*, not data. No route lets one user read another user's habits.
@@ -62,7 +66,7 @@ There's no frontend framework and no build step: pages work without JavaScript, 
 server.js            App setup, security middleware, routes, reminder loop
 config/db.js         Mongo connection
 middleware/          Auth (requireAuth) and same-origin checks
-models/              User, Habit, Checkin, DayNote, Rating, ReminderLog, PushSubscription, AccessToken, DailyMessage
+models/              User, Habit, Checkin, DayNote, Rating, PollenDay, ApiUsage, ReminderLog, PushSubscription, AccessToken, DailyMessage
 lib/
   dates.js           Calendar math, month grid, streak + adherence
   habits.js          Builds everything the dashboard shows
@@ -70,7 +74,8 @@ lib/
   ratings.js         Rating settings + monthly trend
   milestones.js      Best streak + badges
   weekly.js          Weekly summary + push wording
-  reminders.js       The once-a-minute tick: reminders, supply alerts, weekly push
+  pollen.js          Pollen fetch + cache + cost guards, place-name geocoding
+  reminders.js       The once-a-minute tick: reminders, supply alerts, weekly push, pollen pre-fetch
   push.js, messages.js, export.js, sessions.js, icons.js
 routes/              One file per area (auth, checkins, habits, settings, family, week, go…)
 views/               EJS pages + partials
@@ -108,6 +113,8 @@ node scripts/make-admin.js --email=you@example.com
 | `NODE_ENV` | no | `production` turns on secure cookies |
 | `API_NINJAS_KEY` | no | Quotes and advice; without it, built-in fallbacks are used |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | no | Push notifications; without them, push is simply off |
+| `POLLEN_API_KEY` | no | Google Pollen API key; without it, the pollen feature is hidden |
+| `POLLEN_DAILY_CAP` | no | Maximum Pollen API calls per day (default 100) |
 | `BACKUP_DIR`, `BACKUP_KEEP` | no | Where backups go (default `./backups`) and how many to keep (default 14) |
 
 Generate the secrets:
@@ -123,10 +130,11 @@ npx web-push generate-vapid-keys                                           # VAP
 npm test
 ```
 
-The suite has about 100 tests:
-- **Unit tests** for the date, streak, pause, counter, rating, milestone and weekly rules. These run in milliseconds.
+The suite has over 100 tests:
+- **Unit tests** for the date, streak, pause, counter, rating, milestone and weekly rules, and for pollen parsing. These run in milliseconds.
 - **End-to-end tests** that start the real `server.js` against an in-memory MongoDB and drive it like a browser. They cover sign-in, check-in and undo, past-day fixes, notes, pauses, counters, ratings, milestones, the week page, shortcuts, settings, family invites and resets, CSRF rejection, and escaping.
 - **Tests for the reminder loop,** run in-process at fixed times. These include a Sunday when the clocks fall back.
+- **Pollen tests** against a local stub of Google and Open-Meteo. They cover one call per day, the daily cap, back-off after a failure, and that the key never appears in logs.
 
 Tests never touch your real database. Set `TEST_MONGODB_URI` to use a local `mongod` instead of the in-memory server.
 
