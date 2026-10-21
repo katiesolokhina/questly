@@ -67,6 +67,10 @@ test('family accounts', async (t) => {
     assert.doesNotMatch((await admin(`/?h=${momHabit}`)).text, /Vitamins/);
     assert.equal((await admin(`/habits/${momHabit}/checkin`, { method: 'POST', form: {} })).status, 404);
     assert.equal((await admin(`/habits/${momHabit}/day/2026-10-02`)).status, 404);
+    // Notes can hold symptoms: the admin must not be able to read or write them either.
+    await mom(`/habits/${momHabit}/day/2026-10-02/note`, { method: 'POST', form: { note: 'private symptom' } });
+    assert.equal((await admin(`/habits/${momHabit}/day/2026-10-02/note`, { method: 'POST', form: { note: 'x' } })).status, 404);
+    assert.doesNotMatch((await admin('/settings/export.csv')).text, /private symptom/);
   });
 
   await t.test('members have no admin powers', async () => {

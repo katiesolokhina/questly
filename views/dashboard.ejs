@@ -57,6 +57,18 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
       </a>
     </div>
+    <% if (habit.description || (habit.link && habit.link.url)) { %>
+  <div class="habit-details">
+    <% if (habit.description) { %><p class="habit-desc"><%= habit.description %></p><% } %>
+    <% if (habit.link && habit.link.url) { %>
+      <a class="habit-link" href="<%= habit.link.url %>" target="_blank" rel="noopener noreferrer">
+        <%= habit.link.label || new URL(habit.link.url).hostname.replace(/^www\./, '') %>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3h7v7"/><path d="M10 14L21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>
+        <span class="sr-only">(opens in a new tab)</span>
+      </a>
+    <% } %>
+  </div>
+<% } %>
 
     <% if (todayCheckin) { %>
       <section class="done-card" aria-live="polite">
@@ -103,6 +115,15 @@
         </form>
       </section>
     <% } %>
+
+    <a class="today-note" href="/habits/<%= habit.id %>/day/<%= today %>?m=<%= ym %>">
+  <% if (todayNote) { %>
+    <span class="today-note-label">Today's note</span>
+    <span class="today-note-text"><%= todayNote %></span>
+  <% } else { %>
+    <span class="today-note-add">+ Add a note for today</span>
+  <% } %>
+</a>
 
     <div class="stats">
       <div class="stat">
@@ -152,8 +173,8 @@
                   <td></td>
                 <% } else { %>
                   <td>
-  <% if (['done', 'missed', 'off'].includes(c.status)) { %>
-    <a class="day day-<%= c.status %> day-link" href="/habits/<%= habit.id %>/day/<%= c.date %>?m=<%= ym %>"><%= c.day %><span class="sr-only">, <%= c.label %>. Edit</span></a>
+<% if (['done', 'missed', 'off', 'today', 'today-done'].includes(c.status)) { %>
+  <a class="day day-<%= c.status %> day-link<%= c.hasNote ? ' has-note' : '' %>" href="/habits/<%= habit.id %>/day/<%= c.date %>?m=<%= ym %>"<%- c.status.startsWith('today') ? ' aria-current="date"' : '' %>><%= c.day %><span class="sr-only">, <%= c.label %><%= c.hasNote ? ', has a note' : '' %>. Open</span></a>
   <% } else { %>
     <span class="day day-<%= c.status %>"<%- c.status.startsWith('today') ? ' aria-current="date"' : '' %>><%= c.day %><% if (c.label) { %><span class="sr-only">, <%= c.label %></span><% } %></span>
   <% } %>

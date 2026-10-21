@@ -6,6 +6,7 @@ const { startApp, client, withDb, localToday } = require('./helpers');
 const User = require('../models/User');
 const Habit = require('../models/Habit');
 const Checkin = require('../models/Checkin');
+const DayNote = require('../models/DayNote');
 
 const START = '2026-01-01';
 
@@ -151,6 +152,65 @@ test('core flows', async (t) => {
     assert.equal(r.status, 302);
     assert.equal((await c('/settings?saved=password')).status, 200);
     assert.equal((await other('/')).location, '/login', 'other device should be signed out');
+  });
+
+  await t.test('habit details and link show on the dashboard', async () => {
+    const r = await c(`/habits/${h}`, { method: 'POST', form: {
+      name: 'Drops', kind: 'medication', icon: 'drop', schedule: 'every', startDate: START,
+      description: '3 drops under the tongue\nhold 2 minutes', linkUrl: 'quello.com/account', linkLabel: 'My Quello account',
+    } });
+    assert.equal(r.status, 302);
+    const dash = (await c('/')).text;
+    assert.match(dash, /3 drops under the tongue/);
+    assert.match(dash, /href="https:\/\/quello\.com\/account" target="_blank" rel="noopener noreferrer"/);
+    assert.match(dash, /My Quello account/);
+  });
+
+  await t.test('javascript: links are rejected', async () => {
+    const r = await c(`/habits/${h}`, { method: 'POST', form: { name: 'Drops', schedule: 'every', startDate: START, linkUrl: 'javascript:alert(1)' } });
+    assert.equal(r.status, 422);
+    assert.match(r.text, /Links must start with https/);
+  });
+
+  await t.test('note for today: saved, shown on the dashboard, dot on today', async () => {
+    const r = await c(`/habits/${h}/day/${today}/note`, { method: 'POST', form: { note: 'Itchy throat after\nbut fine' } });
+    assert.match(r.location, /saved=note/);
+    const dash = (await c('/')).text;
+    assert.match(dash, /Today's note/);
+    assert.match(dash, /Itchy throat after/);
+    assert.match(dash, new RegExp(`has-note" href="/habits/${h}/day/${today}`));
+  });
+
+  await t.test('notes are escaped, not run as HTML', async () => {
+    await c(`/habits/${h}/day/${past}/note`, { method: 'POST', form: { note: '<script>alert(1)</script>' } });
+    const page = (await c(`/habits/${h}/day/${past}`)).text;
+    assert.doesNotMatch(page, /<script>alert/);
+    assert.match(page, /&lt;script&gt;/);
+  });
+
+  await t.test('note limits: too long rejected, future rejected, empty deletes', async () => {
+    assert.equal((await c(`/habits/${h}/day/${past}/note`, { method: 'POST', form: { note: 'x'.repeat(501) } })).status, 422);
+    assert.equal((await c(`/habits/${h}/day/${addDays(today, 1)}/note`, { method: 'POST', form: { note: 'later' } })).status, 400);
+    await c(`/habits/${h}/day/${past}/note`, { method: 'POST', form: { note: '   ' } });
+    assert.equal(await withDb(app.uri, () => DayNote.countDocuments({ habitId: h, date: past })), 0);
+  });
+
+  await t.test('today’s day page offers notes but not check-in changes', async () => {
+    const page = (await c(`/habits/${h}/day/${today}`)).text;
+    assert.match(page, /name="note"/);
+    assert.doesNotMatch(page, /Mark as done|Remove check-in/);
+  });
+
+  await t.test('CSV includes notes', async () => {
+    assert.match((await c('/settings/export.csv')).text, /Itchy throat after/);
+  });
+
+  await t.test('deleting a habit deletes its notes', async () => {
+    const r = await c('/habits', { method: 'POST', form: { name: 'Temp', schedule: 'every', startDate: START } });
+    const temp = r.location.split('h=')[1];
+    await c(`/habits/${temp}/day/${today}/note`, { method: 'POST', form: { note: 'temp note' } });
+    await c(`/habits/${temp}/delete`, { method: 'POST', form: {} });
+    assert.equal(await withDb(app.uri, () => DayNote.countDocuments({ habitId: temp })), 0);
   });
 
   await t.test('cross-site POSTs are blocked', async () => {

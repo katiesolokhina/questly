@@ -21,6 +21,13 @@ const habitSchema = new mongoose.Schema(
     // Local date (YYYY-MM-DD). Days before this never count as missed.
     startDate: { type: String, required: true, match: /^\d{4}-\d{2}-\d{2}$/ },
     archived: { type: Boolean, default: false },
+    // Free-text details shown under the title, e.g. "3 drops under the tongue".
+    description: { type: String, trim: true, maxlength: 300, default: '' },
+    // Optional link, e.g. to the prescriber's account page. http(s) only (validated in the route).
+    link: {
+      url: { type: String, trim: true, maxlength: 500, default: '' },
+      label: { type: String, trim: true, maxlength: 40, default: '' },
+    },
     // Push reminder at a local time ("HH:MM"), only if not checked in yet.
     // Medications also get one follow-up nudge 2 hours later.
     reminder: {

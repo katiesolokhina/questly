@@ -9,6 +9,7 @@ const ReminderLog = require('../models/ReminderLog');
 const DailyMessage = require('../models/DailyMessage');
 const PushSubscription = require('../models/PushSubscription');
 const AccessToken = require('../models/AccessToken');
+const DayNote = require('../models/DayNote');
 const { deleteUserSessions } = require('../lib/sessions');
 
 const router = express.Router();
@@ -115,6 +116,7 @@ router.post('/settings/family/members/:id/delete', async (req, res, next) => {
     const habitIds = (await Habit.find({ userId: target._id }, { _id: 1 }).lean()).map((h) => h._id);
     await Promise.all([
       Checkin.deleteMany({ userId: target._id }),
+      DayNote.deleteMany({ userId: target._id }),
       ReminderLog.deleteMany({ habitId: { $in: habitIds } }),
       Habit.deleteMany({ userId: target._id }),
       DailyMessage.deleteMany({ userId: target._id }),

@@ -21,3 +21,9 @@
   border: 1.5px solid currentColor;
 }
 .hint.center { text-align: center; }
+
+.day-status-today .day-dot { border: 2.5px solid var(--lilac-ring); background: var(--lilac-tint); }
+.note-form { display: flex; flex-direction: column; gap: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+.note-actions { display: flex; align-items: center; gap: 12px; }
+.btn-outline-aqua { height: 48px; font-size: 16px; background: var(--surface); color: var(--aqua-deep); border: 1.5px solid var(--aqua); }
+.note-saved { font-size: 14px; font-weight: 600; color: var(--aqua-deep); }

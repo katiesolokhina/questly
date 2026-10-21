@@ -110,3 +110,17 @@ input[type="time"] {
 .delete-habit { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 700; }
 .delete-habit svg { width: 20px; height: 20px; color: var(--muted); }
 .btn-danger { background: var(--danger); color: var(--surface); } /* surface = white in light, near-black in dark: readable on both danger shades */
+
+/* Details */
+textarea {
+  width: 100%; min-height: 84px; padding: 12px 14px; resize: vertical;
+  border: 1.5px solid var(--border); border-radius: 12px;
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; line-height: 1.4;
+}
+textarea:focus-visible { border-color: var(--aqua-deep); outline-offset: 1px; }
+textarea[aria-invalid="true"] { border-color: var(--danger); }
+input[type="url"] {
+  height: 48px; padding: 0 14px; width: 100%;
+  border: 1.5px solid var(--border); border-radius: 12px;
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 16px;
+}

@@ -28,6 +28,29 @@
       <% if (errors.name) { %><span class="field-error" id="name-error"><%= errors.name %></span><% } %>
     </div>
 
+    <div class="field">
+      <label for="description">Details <span class="muted">(optional)</span></label>
+      <textarea id="description" name="description" rows="3" maxlength="300" placeholder="e.g. 3 drops under the tongue, hold 2 minutes"
+        <%- errors.description ? 'aria-invalid="true" aria-describedby="desc-err"' : '' %>><%= values.description %></textarea>
+      <% if (errors.description) { %><span class="field-error" id="desc-err"><%= errors.description %></span><% } %>
+    </div>
+
+    <fieldset class="group">
+      <legend>Link <span class="muted">(optional)</span></legend>
+      <div class="field">
+        <label for="linkUrl">Web address</label>
+        <input id="linkUrl" name="linkUrl" type="url" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://" value="<%= values.linkUrl %>"
+          <%- errors.linkUrl ? 'aria-invalid="true" aria-describedby="url-err"' : '' %>>
+        <% if (errors.linkUrl) { %><span class="field-error" id="url-err"><%= errors.linkUrl %></span><% } %>
+      </div>
+      <div class="field">
+        <label for="linkLabel">Label</label>
+        <input id="linkLabel" name="linkLabel" type="text" maxlength="40" placeholder="e.g. My Quello account" value="<%= values.linkLabel %>"
+          <%- errors.linkLabel ? 'aria-invalid="true" aria-describedby="label-err"' : '' %>>
+        <% if (errors.linkLabel) { %><span class="field-error" id="label-err"><%= errors.linkLabel %></span><% } %>
+      </div>
+    </fieldset>
+
     <fieldset class="group">
       <legend>Type</legend>
       <div class="segmented">

@@ -160,3 +160,21 @@ a.icon-btn, button.icon-btn { color: var(--ink); }
 
 .topbar-actions { display: flex; align-items: center; gap: 2px; }
 .topbar-actions .icon-btn { color: var(--muted); }
+
+/* Habit details under the title */
+.habit-details { display: flex; flex-direction: column; gap: 4px; margin-top: -4px; }
+.habit-desc { font-size: 15px; color: var(--muted); white-space: pre-line; overflow-wrap: anywhere; }
+.habit-link { align-self: flex-start; min-height: 32px; display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; color: var(--aqua-deep); text-underline-offset: 3px; }
+.habit-link svg { width: 15px; height: 15px; }
+
+/* Today's note link */
+.today-note { display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; border-radius: 14px; background: var(--surface); color: var(--ink); text-decoration: none; }
+.today-note-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.today-note-text { font-size: 15px; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.today-note-add { font-size: 15px; font-weight: 600; color: var(--lilac-ink); }
+
+/* Dot under days that have a note */
+.day { position: relative; }
+.day.has-note::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; border-radius: 50%; background: var(--lilac-ink); }
+.day-done.has-note::after, .day-today-done.has-note::after { background: var(--aqua-ink); }
+.key-note { width: 5px; height: 5px; background: var(--lilac-ink); }
