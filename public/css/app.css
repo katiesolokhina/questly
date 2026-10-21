@@ -105,3 +105,9 @@ input:focus-visible { border-color: var(--aqua-deep); outline-offset: 1px; }
 .auth-logo { margin: 0; }
 .auth-logo img { display: block; width: min(280px, 72vw); height: auto; margin: 0 auto; }
 .logo-img { display: block; width: 32px; height: 32px; }
+
+
+.auth-heading { font-size: 20px; font-weight: 700; }
+.field-error { font-size: 14px; font-weight: 600; color: var(--danger); }
+.hint { margin: 0; font-size: 13px; color: var(--muted); }
+input[aria-invalid="true"] { border-color: var(--danger); }

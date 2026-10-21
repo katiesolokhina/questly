@@ -28,6 +28,10 @@ router.post('/login', loginLimiter, async (req, res, next) => {
 
     // Same message either way, so the form doesn't reveal which emails exist.
     if (!ok) return res.status(401).render('login', { error: 'Email or password is incorrect.', email });
+    // Only revealed after a correct password, so it can't be used to probe accounts.
+    if (user.disabled) {
+      return res.status(403).render('login', { error: 'This account is turned off. Ask the person who invited you.', email });
+    }
 
     // New session ID on login prevents session fixation.
     req.session.regenerate((err) => {

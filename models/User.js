@@ -10,6 +10,11 @@ const userSchema = new mongoose.Schema(
     timezone: { type: String, default: 'America/Chicago' },
     // Appearance: 'system' follows the device; 'light'/'dark' override it everywhere.
     theme: { type: String, enum: ['system', 'light', 'dark'], default: 'system' },
+    // admin can invite family members and manage accounts, but never sees their data.
+    role: { type: String, enum: ['admin', 'member'], default: 'member' },
+    // Disabled accounts can't sign in; their data is kept until deleted.
+    disabled: { type: Boolean, default: false },
+    invitedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }
 );

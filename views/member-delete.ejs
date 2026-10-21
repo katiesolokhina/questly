@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"<%- theme ? ` data-theme="${theme}"` : '' %>>
+<head>
+  <%- include('partials/head') %>
+  <link rel="stylesheet" href="/css/habit-form.css">
+  <title>Delete account · Questly</title>
+</head>
+<body>
+<div class="form-page">
+  <header class="form-bar">
+    <a class="bar-link" href="/settings#family">Cancel</a>
+    <h1>Delete account</h1>
+    <span class="bar-spacer" aria-hidden="true"></span>
+  </header>
+  <form class="form-body" method="post" action="/settings/family/members/<%= target._id %>/delete" novalidate>
+    <div class="delete-card">
+      <p class="delete-habit"><%= target.name %></p>
+      <p>This permanently erases <strong><%= target.email %></strong> and everything in it<%= habitCount ? ` (${habitCount} habit${habitCount === 1 ? '' : 's'} with all check-ins)` : '' %>. It can't be undone.</p>
+      <p class="hint">To keep their data, use <strong>Turn off</strong> instead.</p>
+    </div>
+    <div class="field">
+      <label for="confirmEmail">Type <strong><%= target.email %></strong> to confirm</label>
+      <input id="confirmEmail" name="confirmEmail" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" autofocus
+        <%- error ? 'aria-invalid="true" aria-describedby="confirm-error"' : '' %>>
+      <% if (error) { %><span class="field-error" id="confirm-error"><%= error %></span><% } %>
+    </div>
+    <button class="btn btn-danger btn-block" type="submit">Delete account permanently</button>
+  </form>
+</div>
+</body>
+</html>

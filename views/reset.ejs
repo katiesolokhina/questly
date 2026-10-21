@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <%- include('partials/head') %>
+  <title>Reset password · Questly</title>
+</head>
+<body>
+  <main class="auth">
+    <%- include('partials/auth-brand') %>
+
+    <form class="card auth-form" method="post" action="/reset/<%= token %>" novalidate>
+      <h2 class="auth-heading">Choose a new password</h2>
+      <p class="muted">For <strong><%= email %></strong>. You'll be signed out on your other devices.</p>
+      <input type="email" autocomplete="username" value="<%= email %>" hidden>
+      <div class="field">
+        <label for="password">New password</label>
+        <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required autofocus
+          <%- errors.password ? 'aria-invalid="true" aria-describedby="pw-err"' : 'aria-describedby="pw-hint"' %>>
+        <% if (errors.password) { %><span class="field-error" id="pw-err"><%= errors.password %></span><% } else { %>
+          <span class="hint" id="pw-hint">At least 8 characters.</span><% } %>
+      </div>
+      <div class="field">
+        <label for="confirmPassword">Confirm new password</label>
+        <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required
+          <%- errors.confirmPassword ? 'aria-invalid="true" aria-describedby="conf-err"' : '' %>>
+        <% if (errors.confirmPassword) { %><span class="field-error" id="conf-err"><%= errors.confirmPassword %></span><% } %>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit">Save and sign in</button>
+    </form>
+  </main>
+</body>
+</html>

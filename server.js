@@ -14,6 +14,8 @@ const pushRoutes = require('./routes/push');
 const { configurePush } = require('./lib/push');
 const { startReminders } = require('./lib/reminders');
 const settingsRoutes = require('./routes/settings');
+const accessRoutes = require('./routes/access');
+const familyRoutes = require('./routes/family');
 
 if (!process.env.SESSION_SECRET) {
   console.error('SESSION_SECRET is not set');
@@ -55,12 +57,14 @@ app.use(sameOrigin);
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 app.use(authRoutes);
+app.use(accessRoutes);
 
 app.use(dashboardRoutes);
 app.use(checkinRoutes);
 app.use(habitRoutes);
 app.use(pushRoutes);
 app.use(settingsRoutes);
+app.use(familyRoutes);
 
 app.use((req, res) => res.status(404).send('Not found'));
 app.use((err, req, res, next) => {

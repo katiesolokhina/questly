@@ -4,6 +4,7 @@ const rateLimit = require('express-rate-limit');
 const { requireAuth } = require('../middleware/auth');
 const User = require('../models/User');
 const Habit = require('../models/Habit');
+const AccessToken = require('../models/AccessToken');
 const icons = require('../lib/icons');
 const { buildCsv } = require('../lib/export');
 const { localToday } = require('../lib/dates');
@@ -16,12 +17,29 @@ const SAVED = {
   theme: 'Appearance saved.',
   restored: 'Habit restored.',
   deleted: 'Habit deleted.',
+  revoked: 'Invite cancelled.',
+  disabled: 'Account turned off. They’ve been signed out everywhere.',
+  enabled: 'Account turned back on.',
+  removed: 'Account deleted.',
 };
 
 async function renderSettings(req, res, extra = {}) {
   const archived = await Habit.find({ userId: req.user._id, archived: true }).sort({ updatedAt: -1 }).lean();
+
+  // Family section (admin only): accounts and open invites, never anyone's habits.
+  let family = null;
+  if (req.user.role === 'admin') {
+    const [members, invites] = await Promise.all([
+      User.find({ _id: { $ne: req.user._id } }, { name: 1, email: 1, disabled: 1, createdAt: 1 }).sort({ createdAt: 1 }).lean(),
+      AccessToken.find({ kind: 'invite', usedAt: null, expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 }).lean(),
+    ]);
+    family = { members, invites, link: req.session.flashLink || null };
+    delete req.session.flashLink; // a new link is shown exactly once
+  }
+
   res.status(extra.status || 200).render('settings', {
     archived,
+    family,
     icons,
     saved: Object.hasOwn(SAVED, req.query.saved || '') ? SAVED[req.query.saved] : null,
     pwErrors: {},

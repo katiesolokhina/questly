@@ -4,6 +4,8 @@
   <%- include('partials/head') %>
   <link rel="stylesheet" href="/css/habit-form.css">
   <link rel="stylesheet" href="/css/settings.css">
+  <script src="/js/habit-form.js" defer></script>
+  <script src="/js/share-link.js" defer></script>
   <title>Settings · Questly</title>
 </head>
 <body>
@@ -90,6 +92,83 @@
         </ul>
       <% } %>
     </section>
+
+    <% if (family) { %>
+    <!-- Family (admin only) -->
+    <section class="panel" id="family" aria-labelledby="family-title">
+      <h2 id="family-title">Family</h2>
+      <p class="muted small-14">Each person gets a private account. You can manage accounts, but you can't see anyone's habits.</p>
+
+      <% if (family.link) { %>
+        <div class="link-card" role="status">
+          <p class="link-title">
+            <%= family.link.kind === 'invite' ? 'Invite link' : 'Password reset link' %><%= family.link.label ? ' for ' + family.link.label : '' %>
+          </p>
+          <input class="link-input" type="text" readonly value="<%= family.link.url %>" aria-label="Link" data-link-input>
+          <div class="link-actions">
+            <button class="btn-outline" type="button" data-share-link="<%= family.link.url %>">Share</button>
+            <button class="btn-outline" type="button" data-copy-link="<%= family.link.url %>">Copy</button>
+          </div>
+          <p class="hint">Works once, for <%= family.link.days === 1 ? '24 hours' : family.link.days + ' days' %>. This is the only time it's shown, so send it now.</p>
+        </div>
+      <% } %>
+
+      <form class="invite-form" method="post" action="/settings/family/invites">
+        <div class="field">
+          <label for="inviteLabel">Who's it for? <span class="muted">(optional)</span></label>
+          <input id="inviteLabel" name="label" type="text" maxlength="40" placeholder="e.g. Mom">
+        </div>
+        <button class="btn btn-primary" type="submit">Create invite link</button>
+      </form>
+
+      <% if (family.invites.length) { %>
+        <h3>Waiting to be used</h3>
+        <ul class="row-list">
+          <% family.invites.forEach((inv) => { %>
+            <li>
+              <span><strong><%= inv.label || 'Unnamed invite' %></strong>
+                <span class="muted small-14"> · expires <%= inv.expiresAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %></span></span>
+              <form method="post" action="/settings/family/invites/<%= inv._id %>/revoke">
+                <button class="link-btn" type="submit">Cancel<span class="sr-only"> invite<%= inv.label ? ' for ' + inv.label : '' %></span></button>
+              </form>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+
+      <h3>Accounts</h3>
+      <% if (!family.members.length) { %>
+        <p class="muted small-14">No one else yet.</p>
+      <% } else { %>
+        <ul class="row-list members">
+          <% family.members.forEach((m) => { %>
+            <li>
+              <div class="member-info">
+                <strong><%= m.name %></strong><% if (m.disabled) { %> <span class="badge-off">Off</span><% } %>
+                <span class="muted small-14"><%= m.email %></span>
+              </div>
+              <div class="member-actions">
+                <% if (!m.disabled) { %>
+                  <form method="post" action="/settings/family/members/<%= m._id %>/reset">
+                    <button class="link-btn" type="submit">Reset link<span class="sr-only"> for <%= m.name %></span></button>
+                  </form>
+                  <form method="post" action="/settings/family/members/<%= m._id %>/disable"
+                    data-confirm="Turn off <%= m.name %>'s account? They'll be signed out and can't sign in until you turn it back on. Their data is kept.">
+                    <button class="link-btn" type="submit">Turn off<span class="sr-only"> <%= m.name %></span></button>
+                  </form>
+                <% } else { %>
+                  <form method="post" action="/settings/family/members/<%= m._id %>/enable">
+                    <button class="link-btn" type="submit">Turn on<span class="sr-only"> <%= m.name %></span></button>
+                  </form>
+                <% } %>
+                <a class="link-danger" href="/settings/family/members/<%= m._id %>/delete">Delete<span class="sr-only"> <%= m.name %></span></a>
+              </div>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </section>
+    <% } %>
 
     <!-- Export -->
     <section class="panel" aria-labelledby="export-title">

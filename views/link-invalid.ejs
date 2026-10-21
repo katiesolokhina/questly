@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <%- include('partials/head') %>
+  <title>Link not valid · Questly</title>
+</head>
+<body>
+  <main class="auth">
+    <%- include('partials/auth-brand') %>
+    <div class="card auth-form">
+      <h2 class="auth-heading">This link doesn't work</h2>
+      <p class="muted"><%= reason %></p>
+      <a class="btn btn-primary btn-block" href="/login">Go to sign in</a>
+    </div>
+  </main>
+</body>
+</html>

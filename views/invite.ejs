@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <%- include('partials/head') %>
+  <script src="/js/timezone.js" defer></script>
+  <title>Join Questly</title>
+</head>
+<body>
+  <main class="auth">
+    <%- include('partials/auth-brand') %>
+
+    <form class="card auth-form" method="post" action="/invite/<%= token %>" novalidate>
+      <h2 class="auth-heading">You're invited</h2>
+      <p class="muted">Set up your private account. Only you can see your habits.</p>
+      <input type="hidden" name="timezone" value="America/Chicago">
+
+      <div class="field">
+        <label for="name">Your name</label>
+        <input id="name" name="name" type="text" autocomplete="name" maxlength="40" required value="<%= values.name %>"
+          <%- errors.name ? 'aria-invalid="true" aria-describedby="name-err"' : '' %>>
+        <% if (errors.name) { %><span class="field-error" id="name-err"><%= errors.name %></span><% } %>
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" required value="<%= values.email %>"
+          <%- errors.email ? 'aria-invalid="true" aria-describedby="email-err"' : '' %>>
+        <% if (errors.email) { %><span class="field-error" id="email-err"><%= errors.email %></span><% } %>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required
+          <%- errors.password ? 'aria-invalid="true" aria-describedby="pw-err"' : 'aria-describedby="pw-hint"' %>>
+        <% if (errors.password) { %><span class="field-error" id="pw-err"><%= errors.password %></span><% } else { %>
+          <span class="hint" id="pw-hint">At least 8 characters.</span><% } %>
+      </div>
+      <div class="field">
+        <label for="confirmPassword">Confirm password</label>
+        <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required
+          <%- errors.confirmPassword ? 'aria-invalid="true" aria-describedby="conf-err"' : '' %>>
+        <% if (errors.confirmPassword) { %><span class="field-error" id="conf-err"><%= errors.confirmPassword %></span><% } %>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit">Create my account</button>
+    </form>
+  </main>
+</body>
+</html>
