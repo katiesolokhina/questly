@@ -1,0 +1,25 @@
+/* Weekly summary page */
+.week-body { padding: 16px 16px 40px; display: flex; flex-direction: column; gap: 12px; }
+.week-nav { display: flex; align-items: center; justify-content: space-between; }
+.week-range { font-size: 15px; font-weight: 600; color: var(--muted); }
+.week-hero { border-radius: var(--radius); background: var(--lilac-tint); color: var(--lilac-ink); padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; }
+.week-headline { font-size: 18px; font-weight: 700; }
+.week-compare { font-size: 14px; opacity: .9; }
+.week-row { background: var(--surface); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.week-row-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.week-name { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; font-size: 16px; font-weight: 700; color: var(--ink); text-decoration: none; }
+.week-name svg { width: 18px; height: 18px; color: var(--muted); }
+.week-score { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted); }
+.week-perfect { color: var(--aqua-deep); }
+.week-days { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center; }
+.week-days li { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.week-letter { font-size: 11px; font-weight: 600; color: var(--muted); }
+.week-dot { width: 24px; height: 24px; border-radius: 50%; display: block; }
+.w-done { background: var(--aqua); }
+.w-missed { border: 1.5px dashed var(--missed); }
+.w-off, .w-before { background: var(--off); }
+.w-paused { background: repeating-linear-gradient(135deg, var(--pause-a) 0 3px, var(--pause-b) 3px 6px); box-shadow: inset 0 0 0 1px var(--lilac-ring); }
+.w-today { border: 2.5px solid var(--lilac-ring); }
+.w-future { border: 1.5px solid var(--border); }
+.week-note { font-size: 13px; color: var(--muted); }
+.center { text-align: center; }

@@ -192,3 +192,5 @@ a.icon-btn, button.icon-btn { color: var(--ink); }
 .pause-banner-link { min-height: 44px; padding: 0 10px; display: inline-flex; align-items: center; color: var(--lilac-ink); font-size: 14px; font-weight: 600; text-underline-offset: 3px; }
 .plan-pause { align-self: center; min-height: 44px; padding: 0 16px; border-radius: 22px; display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--lilac-ring); color: var(--lilac-ink); background: var(--surface); font-size: 15px; font-weight: 600; text-decoration: none; }
 .plan-pause svg { width: 16px; height: 16px; }
+
+.dash-links { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }

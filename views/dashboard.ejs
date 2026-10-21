@@ -218,10 +218,16 @@
       <li><span class="key key-off"></span>Off day</li>
       <li><span class="key key-paused"></span>Paused</li>
     </ul>
+    <div class="dash-links">
+  <a class="plan-pause" href="/week">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+    Your week
+  </a>
     <a class="plan-pause" href="/habits/<%= habit.id %>/pauses">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
   Plan a pause
 </a>
+</div>
 <%- include('partials/rating-trend') %>
   </main>
 <% } %>

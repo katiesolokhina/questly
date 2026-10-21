@@ -1,0 +1,11 @@
+<%# Weekly summary on/off (account-wide, every device with reminders on). Local: user %>
+<div class="weekly-setting">
+  <div>
+    <p class="push-title">Weekly summary</p>
+    <p class="small-14 muted">Sundays at 7 PM: how the week went for each habit. <a href="/week">See this week</a></p>
+  </div>
+  <form method="post" action="/settings/weekly">
+    <input type="hidden" name="weekly" value="<%= user.weeklySummary === false ? 'on' : 'off' %>">
+    <button class="btn-outline" type="submit" aria-label="<%= user.weeklySummary === false ? 'Turn on weekly summary' : 'Turn off weekly summary' %>"><%= user.weeklySummary === false ? 'Turn on' : 'Turn off' %></button>
+  </form>
+</div>

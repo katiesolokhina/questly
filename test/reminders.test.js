@@ -46,6 +46,20 @@ test('supply alerts', async (t) => {
     assert.ok(await sentFor(low));
   });
 
+  await t.test('weekly summary: Sundays 7–8 PM only, once, and never when turned off', async () => {
+    const sent = async () => (await User.findById(user._id).lean()).weeklySentFor;
+    await tick(at('2026-10-24T19:10:00')); // Saturday
+    assert.equal(await sent(), undefined);
+    await tick(at('2026-10-25T18:59:00'));
+    assert.equal(await sent(), undefined);
+    await tick(at('2026-10-25T19:00:00'));
+    assert.equal(await sent(), '2026-10-25');
+    const quiet = await User.create({ email: 'q@test.dev', name: 'Q', role: 'member', passwordHash: 'x', weeklySummary: false });
+    await tick(at('2026-11-01T20:05:00')); // = 7:05 PM CST: clocks fell back that morning
+    assert.equal(await sent(), '2026-11-01');
+    assert.equal((await User.findById(quiet._id).lean()).weeklySentFor, undefined);
+  });
+
   await t.test('wording', () => {
     assert.equal(supplyMessage({ out: false, daysLeft: 1, unit: 'doses' }), 'About 1 day of doses left. Time to reorder.');
     assert.match(supplyMessage({ out: true, unit: 'doses' }), /out of doses/);

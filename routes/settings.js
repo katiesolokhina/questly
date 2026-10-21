@@ -21,6 +21,8 @@ const SAVED = {
   disabled: 'Account turned off. They’ve been signed out everywhere.',
   enabled: 'Account turned back on.',
   removed: 'Account deleted.',
+  weeklyOn: 'Weekly summary turned on.',
+  weeklyOff: 'Weekly summary turned off.',
 };
 
 async function renderSettings(req, res, extra = {}) {
@@ -106,6 +108,17 @@ router.post('/settings/theme', async (req, res, next) => {
     const theme = ['system', 'light', 'dark'].includes(req.body.theme) ? req.body.theme : 'system';
     await User.updateOne({ _id: req.user._id }, { $set: { theme } });
     res.redirect('/settings?saved=theme');
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ---------- Weekly summary ----------
+router.post('/settings/weekly', async (req, res, next) => {
+  try {
+    const on = req.body.weekly === 'on';
+    await User.updateOne({ _id: req.user._id }, { $set: { weeklySummary: on } });
+    res.redirect(`/settings?saved=${on ? 'weeklyOn' : 'weeklyOff'}#notifications`);
   } catch (err) {
     next(err);
   }

@@ -65,3 +65,7 @@
 }
 .link-btn-danger { color: var(--danger); }
 #push-card [data-status]:empty { display: none; }
+
+/* Weekly summary */
+.weekly-setting { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.weekly-setting .btn-outline { flex-shrink: 0; }

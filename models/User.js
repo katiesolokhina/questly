@@ -15,6 +15,9 @@ const userSchema = new mongoose.Schema(
     // Disabled accounts can't sign in; their data is kept until deleted.
     disabled: { type: Boolean, default: false },
     invitedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    // Sunday 7 PM summary push. weeklySentFor = the Sunday it last went out (once per week).
+    weeklySummary: { type: Boolean, default: true },
+    weeklySentFor: { type: String },
   },
   { timestamps: true }
 );

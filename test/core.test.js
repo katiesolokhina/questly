@@ -414,6 +414,31 @@ test('core flows', async (t) => {
     assert.doesNotMatch((await c(`/?h=${walk}`)).text, /badges-card/, 'milestones can be turned off');
   });
 
+  // ---------- Weekly summary ----------
+  await t.test('week page: headline, a row per habit, safe navigation', async () => {
+    const r = await c('/week');
+    assert.equal(r.status, 200);
+    assert.match(r.text, /This week/);
+    assert.match(r.text, /check-ins|Nothing was due yet/);
+    assert.match(r.text, /week-row/);
+    assert.match(r.text, /\s+Drops\s+<\/a>/);
+    assert.doesNotMatch(r.text, /aria-label="Next week"/, 'no browsing into the future');
+    const old = await c(`/week?w=${addDays(today, -14)}`);
+    assert.match(old.text, /Your week/);
+    assert.match(old.text, /aria-label="Next week"/);
+    assert.equal((await c('/week?w=nonsense')).status, 200);
+    assert.match((await c('/week?w=2999-01-01')).text, /This week/);
+  });
+
+  await t.test('weekly summary can be turned off and on in Settings', async () => {
+    assert.match((await c('/settings')).text, /Turn off weekly summary/);
+    let r = await c('/settings/weekly', { method: 'POST', form: { weekly: 'off' } });
+    assert.match(r.location, /saved=weeklyOff/);
+    assert.match((await c('/settings')).text, /Turn on weekly summary/);
+    await c('/settings/weekly', { method: 'POST', form: { weekly: 'on' } });
+    assert.match((await c('/settings')).text, /Turn off weekly summary/);
+  });
+
   await t.test('habits without counters show no counter cards', async () => {
     assert.doesNotMatch((await c(`/?h=${h}`)).text, /counter-card/);
   });

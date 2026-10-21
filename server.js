@@ -16,6 +16,7 @@ const { startReminders } = require('./lib/reminders');
 const settingsRoutes = require('./routes/settings');
 const accessRoutes = require('./routes/access');
 const familyRoutes = require('./routes/family');
+const weekRoutes = require('./routes/week');
 
 if (!process.env.SESSION_SECRET) {
   console.error('SESSION_SECRET is not set');
@@ -65,6 +66,7 @@ app.use(habitRoutes);
 app.use(pushRoutes);
 app.use(settingsRoutes);
 app.use(familyRoutes);
+app.use(weekRoutes);
 
 app.use((req, res) => res.status(404).send('Not found'));
 app.use((err, req, res, next) => {

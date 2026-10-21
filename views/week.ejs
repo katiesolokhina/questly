@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"<%- theme ? ` data-theme="${theme}"` : '' %>>
+<head>
+  <%- include('partials/head') %>
+  <link rel="stylesheet" href="/css/habit-form.css">
+  <link rel="stylesheet" href="/css/week.css">
+  <title>Your week · Questly</title>
+</head>
+<body>
+<div class="form-page">
+  <header class="form-bar">
+    <a class="bar-link" href="/">Back</a>
+    <h1><%= week.isCurrent ? 'This week' : 'Your week' %></h1>
+    <span class="bar-spacer" aria-hidden="true"></span>
+  </header>
+
+  <main class="week-body">
+    <nav class="week-nav" aria-label="Weeks">
+      <% if (prev) { %><a class="icon-btn" href="/week?w=<%= prev %>" aria-label="Previous week"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></a><% } else { %><span class="icon-btn" aria-hidden="true"></span><% } %>
+      <span class="week-range"><%= week.label %></span>
+      <% if (next) { %><a class="icon-btn" href="/week?w=<%= next %>" aria-label="Next week"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></a><% } else { %><span class="icon-btn" aria-hidden="true"></span><% } %>
+    </nav>
+
+    <section class="week-hero">
+      <p class="week-headline"><%= week.headline %></p>
+      <% if (week.compare) { %><p class="week-compare"><%= week.compare %></p><% } %>
+    </section>
+
+    <% if (!week.rows.length) { %>
+      <p class="hint center">No habits this week.</p>
+    <% } %>
+    <% week.rows.forEach((r) => { %>
+      <section class="week-row" aria-labelledby="wr-<%= r.id %>">
+        <div class="week-row-head">
+          <a class="week-name" id="wr-<%= r.id %>" href="/?h=<%= r.id %>">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="<%= icons[r.icon] %>"/></svg>
+            <%= r.name %>
+          </a>
+          <span class="week-score<%= r.perfect ? ' week-perfect' : '' %>"><%= r.score %></span>
+        </div>
+        <ol class="week-days">
+          <% r.days.forEach((d) => { %>
+            <li><span class="week-letter" aria-hidden="true"><%= d.letter %></span><span class="week-dot w-<%= d.status %>" title="<%= d.label %>"></span><span class="sr-only"><%= d.label %></span></li>
+          <% }) %>
+        </ol>
+        <p class="week-note"><%= r.note %></p>
+        <% if (r.rating) { %><p class="week-note"><%= r.rating %></p><% } %>
+      </section>
+    <% }) %>
+  </main>
+</div>
+</body>
+</html>
