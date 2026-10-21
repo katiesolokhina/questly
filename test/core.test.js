@@ -213,6 +213,53 @@ test('core flows', async (t) => {
     assert.equal(await withDb(app.uri, () => DayNote.countDocuments({ habitId: temp })), 0);
   });
 
+  await t.test('pause validation: end before start, too long, overlapping', async () => {
+    let r = await c(`/habits/${h}/pauses`, { method: 'POST', form: { from: addDays(today, 5), to: addDays(today, 2), reason: 'travel' } });
+    assert.equal(r.status, 422);
+    r = await c(`/habits/${h}/pauses`, { method: 'POST', form: { from: addDays(today, 1), to: addDays(today, 95), reason: 'travel' } });
+    assert.equal(r.status, 422);
+    assert.match(r.text, /90 days or fewer/);
+    await c(`/habits/${h}/pauses`, { method: 'POST', form: { from: addDays(today, 3), to: addDays(today, 5), reason: 'travel' } });
+    r = await c(`/habits/${h}/pauses`, { method: 'POST', form: { from: addDays(today, 5), to: addDays(today, 7), reason: 'sick' } });
+    assert.equal(r.status, 422);
+    assert.match(r.text, /Overlaps/);
+  });
+
+  await t.test('upcoming pause shows a banner and is listed', async () => {
+    assert.match((await c('/')).text, /Pause planned · Travel/);
+    assert.match((await c(`/habits/${h}/pauses`)).text, /upcoming/);
+  });
+
+  await t.test('a pause after the fact repairs the streak for a missed day', async () => {
+    const sick = addDays(today, -2);
+    await c(`/habits/${h}/day/${sick}`, { method: 'POST', form: { action: 'remove' } });
+    assert.match((await c('/')).text, /stat-accent">1</, 'missing yesterday-but-one leaves streak 1');
+    const r = await c(`/habits/${h}/pauses`, { method: 'POST', form: { from: sick, to: sick, reason: 'sick' } });
+    assert.match(r.location, /saved=1/);
+    const dash = (await c('/')).text;
+    assert.doesNotMatch(dash, /stat-accent">1</, 'streak should no longer stop at the paused day');
+    assert.match((await c(`/habits/${h}/day/${sick}`)).text, /Paused · Sick/);
+    assert.match((await c('/settings/export.csv')).text, new RegExp(`"${sick}","\\w+","Paused"`));
+  });
+
+  await t.test('paused today: no check-in button, says paused, can still log anyway', async () => {
+    await c(`/habits/${h}/pauses`, { method: 'POST', form: { from: today, to: today, reason: 'doctor' } });
+    const dash = (await c('/')).text;
+    assert.match(dash, /Paused today/);
+    assert.doesNotMatch(dash, /btn-checkin/);
+    assert.match(dash, /Log anyway/);
+  });
+
+  await t.test('removing pauses restores normal behavior', async () => {
+    const page = (await c(`/habits/${h}/pauses`)).text;
+    const ids = [...page.matchAll(/\/pauses\/([a-f0-9]{24})\/delete/g)].map((m) => m[1]);
+    assert.equal(ids.length, 3);
+    for (const id of ids) await c(`/habits/${h}/pauses/${id}/delete`, { method: 'POST', form: {} });
+    const dash = (await c('/')).text;
+    assert.match(dash, /btn-checkin/);
+    assert.doesNotMatch(dash, /pause-banner/);
+  });
+
   await t.test('cross-site POSTs are blocked', async () => {
     const r = await c(`/habits/${h}/checkin`, { method: 'POST', form: {}, origin: 'https://evil.example' });
     assert.equal(r.status, 403);

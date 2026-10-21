@@ -73,7 +73,16 @@
     <% } %>
   </div>
 <% } %>
-
+<% if (pauseBanner) { %>
+  <div class="pause-banner" role="status">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+    <div class="pause-banner-text">
+      <span class="pause-banner-title"><%= pauseBanner.active ? 'Paused' : 'Pause planned' %> · <%= pauseBanner.reason %></span>
+      <span class="pause-banner-sub"><%= pauseBanner.range %> · no reminders, streak kept</span>
+    </div>
+    <a class="pause-banner-link" href="/habits/<%= habit.id %>/pauses">Manage</a>
+  </div>
+<% } %>
     <% if (todayCheckin) { %>
       <section class="done-card" aria-live="polite">
         <div class="done-row">
@@ -110,8 +119,13 @@
     <% } else { %>
       <section class="rest-card">
         <div>
-          <p class="rest-title">Rest day</p>
-          <p class="small-14 rest-sub">Not scheduled on <%= todayDayName %>s</p>
+          <% if (pausedToday) { %>
+  <p class="rest-title">Paused today</p>
+  <p class="small-14 rest-sub">Nothing expected. Your streak is safe.</p>
+<% } else { %>
+  <p class="rest-title">Rest day</p>
+  <p class="small-14 rest-sub">Not scheduled on <%= todayDayName %>s</p>
+<% } %>
         </div>
         <form method="post" action="/habits/<%= habit.id %>/checkin">
           <input type="hidden" name="m" value="<%= ym %>">
@@ -177,7 +191,7 @@
                   <td></td>
                 <% } else { %>
                   <td>
-<% if (['done', 'missed', 'off', 'today', 'today-done'].includes(c.status)) { %>
+<% if (['done', 'missed', 'off', 'today', 'today-done'].includes(c.status) || (c.status === 'paused' && c.date < today)) { %>
   <a class="day day-<%= c.status %> day-link<%= c.hasNote ? ' has-note' : '' %>" href="/habits/<%= habit.id %>/day/<%= c.date %>?m=<%= ym %>"<%- c.status.startsWith('today') ? ' aria-current="date"' : '' %>><%= c.day %><span class="sr-only">, <%= c.label %><%= c.hasNote ? ', has a note' : '' %>. Open</span></a>
   <% } else { %>
     <span class="day day-<%= c.status %>"<%- c.status.startsWith('today') ? ' aria-current="date"' : '' %>><%= c.day %><% if (c.label) { %><span class="sr-only">, <%= c.label %></span><% } %></span>
@@ -196,7 +210,12 @@
       <li><span class="key key-missed"></span>Missed</li>
       <li><span class="key key-today"></span>Today</li>
       <li><span class="key key-off"></span>Off day</li>
+      <li><span class="key key-paused"></span>Paused</li>
     </ul>
+    <a class="plan-pause" href="/habits/<%= habit.id %>/pauses">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+  Plan a pause
+</a>
   </main>
 <% } %>
 </div>

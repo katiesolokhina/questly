@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en"<%- theme ? ` data-theme="${theme}"` : '' %>>
+<head>
+  <%- include('partials/head') %>
+  <link rel="stylesheet" href="/css/habit-form.css">
+  <link rel="stylesheet" href="/css/day.css">
+  <title>Pauses · <%= habit.name %> · Questly</title>
+</head>
+<body>
+<div class="form-page">
+  <header class="form-bar">
+    <a class="bar-link" href="/?h=<%= habit.id %>">Back</a>
+    <h1>Pauses</h1>
+    <span class="bar-spacer" aria-hidden="true"></span>
+  </header>
+
+  <main class="day-body">
+    <p class="day-habit">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="<%= icons[habit.icon] %>"/></svg>
+      <%= habit.name %>
+    </p>
+    <p class="hint">Paused days count as off days: they don't break your streak, don't lower your on-schedule %, and get no reminders. You can add a pause after the fact too, like a sick week.</p>
+
+    <% if (saved) { %><p class="alert alert-ok" role="status">Pause saved.</p><% } %>
+
+    <form class="pause-form" method="post" action="/habits/<%= habit.id %>/pauses" novalidate>
+      <h2>Plan a pause</h2>
+      <div class="pause-dates">
+        <div class="field">
+          <label for="from">From</label>
+          <input id="from" name="from" type="date" value="<%= values.from %>"
+            <%- errors.from ? 'aria-invalid="true" aria-describedby="from-err"' : '' %>>
+          <% if (errors.from) { %><span class="field-error" id="from-err"><%= errors.from %></span><% } %>
+        </div>
+        <div class="field">
+          <label for="to">To</label>
+          <input id="to" name="to" type="date" value="<%= values.to %>"
+            <%- errors.to ? 'aria-invalid="true" aria-describedby="to-err"' : '' %>>
+        </div>
+      </div>
+      <% if (errors.to) { %><span class="field-error" id="to-err"><%= errors.to %></span><% } %>
+      <fieldset class="group">
+        <legend>Reason</legend>
+        <div class="reason-chips">
+          <% Object.entries(reasons).forEach(([value, label]) => { %>
+            <input class="sr-only" type="radio" id="reason-<%= value %>" name="reason" value="<%= value %>" <%= values.reason === value ? 'checked' : '' %>>
+            <label for="reason-<%= value %>"><%= label %></label>
+          <% }) %>
+        </div>
+      </fieldset>
+      <button class="btn btn-primary" type="submit">Save pause</button>
+      <p class="hint">Up to <%= max %> days. The days are inclusive.</p>
+    </form>
+
+    <% if (list.length) { %>
+      <section class="pause-list" aria-labelledby="list-title">
+        <h2 id="list-title">Your pauses</h2>
+        <ul>
+          <% list.forEach((p) => { %>
+            <li>
+              <div>
+                <span class="pause-range"><%= p.range %></span>
+                <span class="hint"><%= p.reason %> · <%= p.days %> day<%= p.days === 1 ? '' : 's' %><%= p.when === 'now' ? ' · happening now' : p.when === 'upcoming' ? ' · upcoming' : '' %></span>
+              </div>
+              <form method="post" action="/habits/<%= habit.id %>/pauses/<%= p.id %>/delete">
+                <button class="link-danger link-btn-plain" type="submit">Remove<span class="sr-only"> pause <%= p.range %></span></button>
+              </form>
+            </li>
+          <% }) %>
+        </ul>
+      </section>
+    <% } %>
+  </main>
+</div>
+</body>
+</html>

@@ -34,11 +34,11 @@
         <input type="hidden" name="m" value="<%= m %>">
         <button class="btn btn-danger-outline btn-block" type="submit">Remove check-in</button>
       </form>
-    <% } else if (!isToday && (status.kind === 'missed' || status.kind === 'off')) { %>
+    <% } else if (!isToday && ['missed', 'off', 'paused'].includes(status.kind)) { %>
       <form method="post" action="/habits/<%= habit.id %>/day/<%= date %>">
         <input type="hidden" name="action" value="add">
         <input type="hidden" name="m" value="<%= m %>">
-        <button class="btn btn-primary btn-block" type="submit"><%= status.kind === 'off' ? 'Log anyway' : 'Mark as done' %></button>
+        <button class="btn btn-primary btn-block" type="submit"><%= status.kind === 'missed' ? 'Mark as done' : 'Log anyway' %></button>
       </form>
       <p class="hint center">It will be noted as added later.</p>
     <% } %>

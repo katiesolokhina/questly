@@ -88,6 +88,9 @@ async function dayView(req, habit, date, today, extra = {}) {
       : checkin.source === 'backfill' ? `Added later, on ${longDate(localToday(req.user.timezone, checkin.checkedInAt))}`
       : `Logged at ${localTime(checkin.checkedInAt, req.user.timezone)}`;
     status = { kind: 'done', title: isToday ? 'Done today' : 'Done', detail: when };
+  } else if (date >= habit.startDate && habit.pauseOn(date)) {
+    const reason = Habit.PAUSE_REASONS[habit.pauseOn(date).reason] || 'Break';
+    status = { kind: 'paused', title: `Paused · ${reason}`, detail: isToday ? 'Paused today, so nothing is expected. Use “Log anyway” on the main screen if you did it.' : 'Doesn’t count as missed. Did it anyway? Mark it done.' };
   } else if (isToday) {
     status = { kind: 'today', title: 'Today', detail: scheduled ? 'Not checked in yet. Use the button on the main screen.' : 'Off day. Use “Log anyway” on the main screen if you did it.' };
   } else if (date < habit.startDate) {

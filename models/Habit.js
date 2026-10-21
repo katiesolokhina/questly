@@ -28,6 +28,14 @@ const habitSchema = new mongoose.Schema(
       url: { type: String, trim: true, maxlength: 500, default: '' },
       label: { type: String, trim: true, maxlength: 40, default: '' },
     },
+    // Pauses (travel, sick, doctor's break): days inside count as off days. Inclusive local dates.
+    pauses: [
+      {
+        from: { type: String, required: true, match: /^\d{4}-\d{2}-\d{2}$/ },
+        to: { type: String, required: true, match: /^\d{4}-\d{2}-\d{2}$/ },
+        reason: { type: String, enum: ['travel', 'sick', 'doctor', 'other'], default: 'other' },
+      },
+    ],
     // Push reminder at a local time ("HH:MM"), only if not checked in yet.
     // Medications also get one follow-up nudge 2 hours later.
     reminder: {
@@ -41,6 +49,13 @@ const habitSchema = new mongoose.Schema(
 habitSchema.methods.isScheduledOn = function (dow) {
   return this.schedule.every || this.schedule.days.includes(dow);
 };
+
+// The pause covering a local date, if any.
+habitSchema.methods.pauseOn = function (date) {
+  return (this.pauses || []).find((p) => date >= p.from && date <= p.to) || null;
+};
+
+habitSchema.statics.PAUSE_REASONS = { travel: 'Travel', sick: 'Sick', doctor: 'Doctor’s break', other: 'Break' };
 
 habitSchema.statics.ICONS = ICONS;
 

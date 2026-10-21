@@ -27,3 +27,25 @@
 .note-actions { display: flex; align-items: center; gap: 12px; }
 .btn-outline-aqua { height: 48px; font-size: 16px; background: var(--surface); color: var(--aqua-deep); border: 1.5px solid var(--aqua); }
 .note-saved { font-size: 14px; font-weight: 600; color: var(--aqua-deep); }
+
+/* Paused day status + Pauses page */
+.day-status-paused .day-dot { background: repeating-linear-gradient(135deg, var(--pause-a) 0 4px, var(--pause-b) 4px 8px); box-shadow: inset 0 0 0 1.5px var(--lilac-ring); }
+.alert-ok { background: var(--aqua); color: var(--aqua-ink); }
+.pause-form { display: flex; flex-direction: column; gap: 14px; background: var(--surface); border-radius: var(--radius); padding: 16px; }
+.pause-form h2, .pause-list h2 { margin: 0; font-size: 17px; font-weight: 700; }
+.pause-form .btn { align-self: flex-start; height: 48px; font-size: 16px; }
+.pause-dates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.reason-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.reason-chips label {
+  height: 40px; padding: 0 14px; border-radius: 20px; display: inline-flex; align-items: center; cursor: pointer;
+  border: 1.5px solid var(--border); background: var(--surface); font-size: 14px; font-weight: 600;
+}
+.reason-chips input:checked + label { border-color: var(--lilac-ink); background: var(--lilac-ink); color: var(--surface); }
+.reason-chips input:focus-visible + label { outline: 2px solid var(--aqua-deep); outline-offset: 2px; }
+.pause-list { background: var(--surface); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.pause-list ul { list-style: none; margin: 0; padding: 0; }
+.pause-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); }
+.pause-list li:first-child { border-top: 0; }
+.pause-list li > div { display: flex; flex-direction: column; gap: 2px; }
+.pause-range { font-weight: 600; }
+.link-btn-plain { border: 0; background: transparent; padding: 0 4px; cursor: pointer; font-family: inherit; }

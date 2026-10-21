@@ -6,7 +6,7 @@ const Checkin = require('../models/Checkin');
 const ReminderLog = require('../models/ReminderLog');
 const DayNote = require('../models/DayNote');
 const icons = require('../lib/icons');
-const { DAY_SHORT, DAY_FULL, isISODate, localToday } = require('../lib/dates');
+const { DAY_SHORT, DAY_FULL, isISODate, localToday, longDate, daysBetweenInclusive } = require('../lib/dates');
 
 const router = express.Router();
 router.use('/habits', requireAuth);
@@ -193,6 +193,77 @@ router.post('/habits/:id/delete', async (req, res, next) => {
     await DayNote.deleteMany({ habitId: habit._id });
     await Habit.deleteOne({ _id: habit._id });
     res.redirect(from === 'settings' ? '/settings?saved=deleted' : '/');
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ---------- Pauses ----------
+// Planned or after-the-fact breaks. Days inside a pause count as off days.
+const PAUSE_MAX_DAYS = 90;
+
+async function renderPauses(req, res, habit, { values, errors = {}, saved = false } = {}) {
+  const today = localToday(req.user.timezone);
+  const list = [...habit.pauses].sort((a, b) => (a.from < b.from ? 1 : -1)).map((p) => ({
+    id: p.id,
+    reason: Habit.PAUSE_REASONS[p.reason] || 'Break',
+    range: p.from === p.to ? longDate(p.from) : `${longDate(p.from)} – ${longDate(p.to)}`,
+    days: daysBetweenInclusive(p.from, p.to),
+    when: p.to < today ? 'past' : p.from > today ? 'upcoming' : 'now',
+  }));
+  res.status(Object.keys(errors).length ? 422 : 200).render('pauses', {
+    habit, list, errors, saved, icons, reasons: Habit.PAUSE_REASONS, max: PAUSE_MAX_DAYS,
+    values: values || { from: today, to: today, reason: 'travel' },
+  });
+}
+
+router.get('/habits/:id/pauses', async (req, res, next) => {
+  try {
+    const habit = await ownHabit(req);
+    if (!habit) return res.status(404).send('Habit not found');
+    await renderPauses(req, res, habit, { saved: req.query.saved === '1' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/habits/:id/pauses', async (req, res, next) => {
+  try {
+    const habit = await ownHabit(req);
+    if (!habit) return res.status(404).send('Habit not found');
+    const from = String(req.body.from || '');
+    const to = String(req.body.to || '');
+    const reason = Object.hasOwn(Habit.PAUSE_REASONS, req.body.reason) ? req.body.reason : 'other';
+    const errors = {};
+    if (!isISODate(from)) errors.from = 'Pick a start date.';
+    if (!isISODate(to)) errors.to = 'Pick an end date.';
+    if (!errors.from && !errors.to) {
+      if (to < from) errors.to = 'The end date is before the start date.';
+      else if (daysBetweenInclusive(from, to) > PAUSE_MAX_DAYS) errors.to = `Keep a pause to ${PAUSE_MAX_DAYS} days or fewer.`;
+      else {
+        const clash = habit.pauses.find((p) => from <= p.to && to >= p.from);
+        if (clash) errors.to = `Overlaps your pause ${longDate(clash.from)} – ${longDate(clash.to)}. Remove that one first.`;
+      }
+    }
+    if (Object.keys(errors).length) return renderPauses(req, res, habit, { values: { from, to, reason }, errors });
+    habit.pauses.push({ from, to, reason });
+    await habit.save();
+    res.redirect(`/habits/${habit.id}/pauses?saved=1`);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/habits/:id/pauses/:pauseId/delete', async (req, res, next) => {
+  try {
+    const habit = await ownHabit(req);
+    if (!habit) return res.status(404).send('Habit not found');
+    // Rewrite the array (a plain $set) rather than $pull, so it behaves the same on any MongoDB-compatible server.
+    const before = habit.pauses.length;
+    habit.pauses = habit.pauses.filter((p) => p.id !== req.params.pauseId);
+    if (habit.pauses.length === before) return res.status(404).send('Pause not found');
+    await habit.save();
+    res.redirect(req.body.back === 'home' ? `/?h=${habit.id}` : `/habits/${habit.id}/pauses`);
   } catch (err) {
     next(err);
   }
