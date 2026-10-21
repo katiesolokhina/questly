@@ -15,6 +15,7 @@ const SAVED = {
   password: 'Password changed. Other devices have been signed out.',
   theme: 'Appearance saved.',
   restored: 'Habit restored.',
+  deleted: 'Habit deleted.',
 };
 
 async function renderSettings(req, res, extra = {}) {

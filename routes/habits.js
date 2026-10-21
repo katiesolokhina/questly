@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const { requireAuth } = require('../middleware/auth');
 const Habit = require('../models/Habit');
+const Checkin = require('../models/Checkin');
+const ReminderLog = require('../models/ReminderLog');
 const icons = require('../lib/icons');
 const { DAY_SHORT, DAY_FULL, isISODate, localToday } = require('../lib/dates');
 
@@ -117,6 +119,51 @@ router.post('/habits/:id/archive', async (req, res, next) => {
     habit.archived = true;
     await habit.save();
     res.redirect('/');
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ---------- Delete permanently ----------
+// Unlike archive, this erases the habit and every check-in. Habits with history
+// require typing the name, so years of data can't disappear from one mis-tap.
+
+async function anyOwnHabit(req) {
+  if (!mongoose.isValidObjectId(req.params.id)) return null;
+  return Habit.findOne({ _id: req.params.id, userId: req.user._id }); // archived or not
+}
+
+const sameName = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+
+router.get('/habits/:id/delete', async (req, res, next) => {
+  try {
+    const habit = await anyOwnHabit(req);
+    if (!habit) return res.status(404).send('Habit not found');
+    const count = await Checkin.countDocuments({ habitId: habit._id });
+    const from = req.query.from === 'settings' ? 'settings' : 'edit';
+    res.render('delete-habit', { habit, count, from, error: null, icons });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/habits/:id/delete', async (req, res, next) => {
+  try {
+    const habit = await anyOwnHabit(req);
+    if (!habit) return res.status(404).send('Habit not found');
+    const count = await Checkin.countDocuments({ habitId: habit._id });
+    const from = req.body.from === 'settings' ? 'settings' : 'edit';
+
+    if (count > 0 && !sameName(req.body.confirmName, habit.name)) {
+      return res.status(422).render('delete-habit', {
+        habit, count, from, icons, error: `Type "${habit.name}" exactly to confirm.`,
+      });
+    }
+
+    await Checkin.deleteMany({ habitId: habit._id });
+    await ReminderLog.deleteMany({ habitId: habit._id });
+    await Habit.deleteOne({ _id: habit._id });
+    res.redirect(from === 'settings' ? '/settings?saved=deleted' : '/');
   } catch (err) {
     next(err);
   }

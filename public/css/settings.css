@@ -32,3 +32,5 @@
   align-self: flex-start; height: 48px; font-size: 16px;
   background: var(--surface); color: var(--aqua-deep); border: 1.5px solid var(--aqua);
 }
+.archived-actions { display: flex; align-items: center; gap: 12px; }
+.link-danger { color: var(--danger); font-size: 15px; font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; }

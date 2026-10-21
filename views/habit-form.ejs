@@ -108,6 +108,10 @@
       <button class="archive-btn" type="submit">Archive this habit</button>
       <p class="hint">Hides it from your list. History is kept.</p>
     </form>
+    <div class="danger-zone">
+      <a class="link-danger" href="/habits/<%= habitId %>/delete">Delete permanently</a>
+      <p class="hint">Created by mistake? This erases the habit and all its check-ins.</p>
+    </div>
   <% } %>
 </div>
 </body>

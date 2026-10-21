@@ -98,3 +98,15 @@ input[type="time"] {
   border: 1.5px solid var(--border); border-radius: 12px;
   background: var(--surface); color: var(--ink); font: inherit; font-size: 16px;
 }
+
+/* Delete */
+.bar-spacer { width: 68px; }
+.danger-zone { margin: 0 16px 40px; display: flex; flex-direction: column; gap: 4px; }
+.link-danger {
+  min-height: 44px; display: inline-flex; align-items: center; align-self: flex-start;
+  color: var(--danger); font-size: 15px; font-weight: 600; text-underline-offset: 3px;
+}
+.delete-card { background: var(--surface); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.delete-habit { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 700; }
+.delete-habit svg { width: 20px; height: 20px; color: var(--muted); }
+.btn-danger { background: var(--danger); color: var(--surface); } /* surface = white in light, near-black in dark: readable on both danger shades */

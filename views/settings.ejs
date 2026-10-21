@@ -79,9 +79,12 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="<%= icons[h.icon] %>"/></svg>
                 <%= h.name %>
               </span>
-              <form method="post" action="/settings/habits/<%= h._id %>/restore">
-                <button class="btn-outline" type="submit">Restore<span class="sr-only"> <%= h.name %></span></button>
-              </form>
+              <div class="archived-actions">
+                <form method="post" action="/settings/habits/<%= h._id %>/restore">
+                  <button class="btn-outline" type="submit">Restore<span class="sr-only"> <%= h.name %></span></button>
+                </form>
+                <a class="link-danger" href="/habits/<%= h._id %>/delete?from=settings">Delete<span class="sr-only"> <%= h.name %></span></a>
+              </div>
             </li>
           <% }) %>
         </ul>
