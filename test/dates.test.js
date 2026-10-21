@@ -28,12 +28,12 @@ test('the same days paused keep the streak and 100%', () => {
   assert.equal(s.adherence, 100);
 });
 
-test('a check-in during a pause counts toward total, not streak', () => {
+test('a check-in during a pause is a bonus: adds to total and streak', () => {
   const isPaused = (d) => d >= '2026-10-10' && d <= '2026-10-14';
   const done = range(start, '2026-10-19', (d) => isPaused(d) && d !== '2026-10-12');
   const s = D.computeStats({ done, today, startDate: start, isScheduled: everyDay, isPaused, ym });
   assert.equal(s.total, 15);
-  assert.equal(s.streak, 14);
+  assert.equal(s.streak, 15);
 });
 
 test('paused today: streak counts from today without waiting for a check-in', () => {
@@ -47,7 +47,17 @@ test('off days are skipped, not breaks (Mon/Wed/Fri)', () => {
   const done = range(start, '2026-10-19', (d) => !mwf(D.dow(d)));
   const s = D.computeStats({ done, today, startDate: start, isScheduled: mwf, ym });
   assert.equal(s.adherence, 100);
-  assert.ok(s.streak >= 8);
+  assert.equal(s.streak, 8); // Oct 2 … Oct 19: 8 scheduled days
+});
+
+test('an off-day check-in adds to the streak; an empty off day never breaks it', () => {
+  const mwf = (dow) => [1, 3, 5].includes(dow);
+  const done = range(start, '2026-10-19', (d) => !mwf(D.dow(d)) && d !== '2026-10-17'); // + Sat Oct 17
+  const s = D.computeStats({ done, today, startDate: start, isScheduled: mwf, ym });
+  assert.equal(s.streak, 9);
+  assert.equal(s.adherence, 100, 'on-schedule % still only looks at scheduled days');
+  const offToday = D.computeStats({ done: new Set([today]), today, startDate: today, isScheduled: mwf, ym }); // Tue
+  assert.equal(offToday.streak, 1);
 });
 
 test('month grid marks past and planned pauses, but today stays "today"', () => {

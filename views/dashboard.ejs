@@ -5,6 +5,7 @@
   <link rel="stylesheet" href="/css/dashboard.css">
   <link rel="stylesheet" href="/css/counter.css">
   <link rel="stylesheet" href="/css/rating.css">
+  <link rel="stylesheet" href="/css/milestones.css">
   <script src="/js/push-setup.js" defer></script>
   <title><%= habit ? habit.name + ' · ' : '' %>Questly</title>
 </head>
@@ -165,6 +166,7 @@
       </div>
     </div>
 
+    <%- include('partials/milestones') %>
     <section class="calendar" aria-labelledby="cal-title">
       <div class="cal-head">
         <% if (prevYm) { %>

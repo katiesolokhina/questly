@@ -379,6 +379,41 @@ test('core flows', async (t) => {
     assert.equal(too.status, 422);
   });
 
+  // ---------- Milestones ----------
+  await t.test('milestones: existing badges stay quiet; hitting 7 celebrates once; goal reached celebrates once', async () => {
+    await withDb(app.uri, () => Habit.updateOne({ _id: h }, { $set: { 'milestones.enabled': true }, $unset: { 'milestones.seen': 1 } }));
+    let dash = (await c(`/?h=${h}`)).text;
+    assert.match(dash, /badges-card/);
+    assert.doesNotMatch(dash, /<dialog class="celebrate"/, 'badges earned before milestones existed do not pop up');
+
+    const r = await c('/habits', { method: 'POST', form: { name: 'Walk', kind: 'habit', icon: 'leaf', schedule: 'every', startDate: addDays(today, -6), milestonesOn: 'on' } });
+    const walk = r.location.match(/h=([a-f0-9]{24})/)[1];
+    await withDb(app.uri, async () => {
+      const u = await User.findOne({ email: 'katie@test.dev' });
+      const docs = [];
+      for (let i = 1; i <= 6; i++) docs.push({ userId: u._id, habitId: walk, date: addDays(today, -i), source: 'backfill' });
+      await Checkin.insertMany(docs);
+    });
+    dash = (await c(`/?h=${walk}`)).text;
+    assert.match(dash, /1 more in a row to <strong>One week/);
+    assert.doesNotMatch(dash, /<dialog class="celebrate"/);
+
+    await c(`/habits/${walk}/checkin`, { method: 'POST', form: {} });
+    dash = (await c(`/?h=${walk}`)).text;
+    assert.match(dash, /<dialog class="celebrate" open/);
+    assert.match(dash, /7 days!/);
+    assert.doesNotMatch((await c(`/?h=${walk}`)).text, /<dialog class="celebrate"/, 'shown once');
+
+    await c(`/habits/${walk}`, { method: 'POST', form: { name: 'Walk', kind: 'habit', icon: 'leaf', schedule: 'every', startDate: addDays(today, -6), milestonesOn: 'on', goalOn: 'on', goalLabel: 'Week one', goalTarget: '7', goalUnit: 'walks', goalPer: '1' } });
+    dash = (await c(`/?h=${walk}`)).text;
+    assert.match(dash, /Goal reached!/);
+    assert.match(dash, /Week one done, 7 walks/);
+    assert.doesNotMatch((await c(`/?h=${walk}`)).text, /<dialog class="celebrate"/);
+
+    await c(`/habits/${walk}`, { method: 'POST', form: { name: 'Walk', kind: 'habit', icon: 'leaf', schedule: 'every', startDate: addDays(today, -6) } });
+    assert.doesNotMatch((await c(`/?h=${walk}`)).text, /badges-card/, 'milestones can be turned off');
+  });
+
   await t.test('habits without counters show no counter cards', async () => {
     assert.doesNotMatch((await c(`/?h=${h}`)).text, /counter-card/);
   });

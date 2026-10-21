@@ -1,0 +1,33 @@
+<%# Streak badges + a one-time celebration. Locals: milestones, celebrate, streakUnit %>
+<% if (milestones) { %>
+  <section class="badges-card" aria-labelledby="badges-title">
+    <div class="badges-head">
+      <h2 id="badges-title">Milestones</h2>
+      <span class="badges-best">Best <strong><%= milestones.best.toLocaleString('en-US') %></strong> in a row</span>
+    </div>
+    <ul class="badges">
+      <% milestones.tiles.forEach((b) => { %>
+        <li class="badge<%= b.earned ? ' badge-earned' : '' %>">
+          <span class="badge-n"><%= b.level.toLocaleString('en-US') %></span>
+          <span class="badge-label"><%= b.label %></span>
+          <span class="sr-only"><%= b.earned ? 'earned' : 'not yet' %></span>
+        </li>
+      <% }) %>
+    </ul>
+    <% if (milestones.next) { %>
+      <p class="badges-next"><%= milestones.next.toGo.toLocaleString('en-US') %> more in a row to <strong><%= milestones.next.label %></strong></p>
+    <% } %>
+  </section>
+<% } %>
+<% if (celebrate) { %>
+  <dialog class="celebrate" open aria-labelledby="celebrate-title">
+    <div class="celebrate-card">
+      <div class="confetti" aria-hidden="true"><% for (let i = 0; i < 16; i++) { %><span></span><% } %></div>
+      <img class="celebrate-mascot" src="/icons/icon-192.png" alt="" width="88" height="88">
+      <h2 class="celebrate-big" id="celebrate-title"><%= celebrate.big %></h2>
+      <p class="celebrate-text"><%= celebrate.text %></p>
+      <div class="celebrate-badge" aria-hidden="true"><span><%= celebrate.badge %></span><small><%= celebrate.badgeUnit %></small></div>
+      <form method="dialog"><button class="btn btn-primary btn-block" type="submit" autofocus>Keep going</button></form>
+    </div>
+  </dialog>
+<% } %>

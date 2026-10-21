@@ -13,6 +13,16 @@ test('defaults follow the habit type; custom labels override one at a time', () 
   assert.equal(R.ratingConfig({ kind: 'habit', rating: { enabled: false } }), null);
 });
 
+test('suggested labels flip with the good end; typed labels are kept as typed', () => {
+  const flipped = R.ratingConfig({ kind: 'habit', rating: { enabled: true, lowIsGood: true } });
+  assert.deepEqual(flipped.labels, ['Great', 'Good', 'Okay', 'Meh', 'Rough']);
+  const medHigh = R.ratingConfig({ kind: 'medication', rating: { enabled: true, lowIsGood: false } });
+  assert.deepEqual(medHigh.labels, ['Severe', 'Bad', 'Moderate', 'Mild', 'Clear']);
+  const typed = R.ratingConfig({ kind: 'habit', rating: { enabled: true, lowIsGood: true, labels: ['Calm', '', '', '', ''] } });
+  assert.equal(typed.labels[0], 'Calm');
+  assert.equal(typed.labels[4], 'Rough');
+});
+
 test('colour level runs best→worst either way', () => {
   assert.equal(R.level(1, true), 5);
   assert.equal(R.level(5, true), 1);
@@ -31,6 +41,8 @@ test('trend: one bar per day up to today, average with its label', () => {
   assert.equal(t.averageLabel, 'Mild');
   assert.equal(t.bars[3].score, null);
   assert.deepEqual(t.findings, []); // too little to compare
+  assert.equal(t.best, '1 Clear');
+  assert.equal(t.worst, '5 Severe');
 });
 
 test('trend: compares with last month in the right direction', () => {

@@ -51,3 +51,11 @@
   </label>
   <div class="counter-fields"><%- render(goalFields) %></div>
 </fieldset>
+
+<fieldset class="group">
+  <legend>Milestones</legend>
+  <label class="switch-row" for="milestonesOn">
+    <span>Badges and a celebration at 7, 30, 100 days and beyond</span>
+    <input class="switch" type="checkbox" id="milestonesOn" name="milestonesOn" <%= values.milestonesOn ? 'checked' : '' %>>
+  </label>
+</fieldset>

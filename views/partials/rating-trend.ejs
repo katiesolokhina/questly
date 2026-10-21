@@ -20,8 +20,8 @@
         <div class="trend-axis" aria-hidden="true"><span><%= t.firstLabel %></span><span><%= t.lastLabel %></span></div>
       </div>
       <ul class="trend-legend" aria-hidden="true">
-        <li><span class="trend-key lvl-5"></span>Best</li>
-        <li><span class="trend-key lvl-1"></span>Worst</li>
+        <li><span class="trend-key lvl-5"></span>Best: <%= t.best %></li>
+        <li><span class="trend-key lvl-1"></span>Worst: <%= t.worst %></li>
         <li><span class="trend-key-dot"></span>Done</li>
       </ul>
       <% if (t.findings.length) { %>

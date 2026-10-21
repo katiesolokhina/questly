@@ -19,6 +19,7 @@ const EMPTY = {
   supplyOn: false, supplyLeft: '', supplySize: '30', supplyPer: '1', supplyUnit: 'doses', supplyWarn: '7', supplyUrl: '',
   goalOn: false, goalLabel: '', goalTarget: '', goalUnit: 'days', goalPer: '1', goalFrom: '',
   ratingOn: false, ratingQuestion: '', ratingLabels: ['', '', '', '', ''], ratingDir: '',
+  milestonesOn: true,
 };
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -85,7 +86,7 @@ function parseForm(body, today) {
   const ratingQuestion = str('ratingQuestion');
   const ratingLabels = [1, 2, 3, 4, 5].map((i) => str(`ratingLabel${i}`));
   const ratingDir = ['low', 'high'].includes(body.ratingDir) ? body.ratingDir : (defaultsFor(kind).lowIsGood ? 'low' : 'high');
-  Object.assign(counters, { ratingOn, ratingQuestion, ratingLabels, ratingDir });
+  Object.assign(counters, { ratingOn, ratingQuestion, ratingLabels, ratingDir, milestonesOn: body.milestonesOn === 'on' });
 
   const errors = {};
   if (ratingQuestion.length > 80) errors.ratingQuestion = 'Keep it to 80 characters or fewer.';
@@ -148,10 +149,12 @@ function counterDoc(v, nums, { habit, rows, today }) {
       target: nums.goalTarget,
       from: v.goalFrom || v.startDate,
     });
+    const o = old.goal || {};
+    if (!o.enabled || o.target !== goal.target || o.from !== goal.from || o.perCheckin !== goal.perCheckin) goal.celebrated = false;
   }
   // Rating: settings are kept when it's turned off, so turning it back on restores them.
   const rating = { enabled: v.ratingOn, question: v.ratingQuestion, labels: v.ratingLabels, lowIsGood: v.ratingDir === 'low' };
-  return { supply, goal, rating };
+  return { supply, goal, rating, milestones: { ...(old.milestones || {}), enabled: v.milestonesOn } };
 }
 
 function toDoc(v) {
@@ -197,6 +200,7 @@ async function counterValues(habit, today) {
     goalUnit: g.unit || EMPTY.goalUnit,
     goalPer: String(g.perCheckin ?? 1),
     goalFrom: g.from || habit.startDate,
+    milestonesOn: !habit.milestones || habit.milestones.enabled !== false,
     ratingOn: Boolean(habit.rating && habit.rating.enabled),
     ratingQuestion: (habit.rating && habit.rating.question) || '',
     ratingLabels: [0, 1, 2, 3, 4].map((i) => (habit.rating && habit.rating.labels && habit.rating.labels[i]) || ''),
