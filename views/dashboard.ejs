@@ -146,7 +146,13 @@
                 <% if (!c.inMonth) { %>
                   <td></td>
                 <% } else { %>
-                  <td><span class="day day-<%= c.status %>"<%- c.status.startsWith('today') ? ' aria-current="date"' : '' %>><%= c.day %><% if (c.label) { %><span class="sr-only">, <%= c.label %></span><% } %></span></td>
+                  <td>
+  <% if (['done', 'missed', 'off'].includes(c.status)) { %>
+    <a class="day day-<%= c.status %> day-link" href="/habits/<%= habit.id %>/day/<%= c.date %>?m=<%= ym %>"><%= c.day %><span class="sr-only">, <%= c.label %>. Edit</span></a>
+  <% } else { %>
+    <span class="day day-<%= c.status %>"<%- c.status.startsWith('today') ? ' aria-current="date"' : '' %>><%= c.day %><% if (c.label) { %><span class="sr-only">, <%= c.label %></span><% } %></span>
+  <% } %>
+</td>
                 <% } %>
               <% }) %>
             </tr>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <%- include('partials/head') %>
+  <link rel="stylesheet" href="/css/habit-form.css">
+  <link rel="stylesheet" href="/css/day.css">
+  <title><%= dateLabel %> · <%= habit.name %> · Questly</title>
+</head>
+<body>
+<div class="form-page">
+  <header class="form-bar">
+    <a class="bar-link" href="<%= back %>">Back</a>
+    <h1><%= dateLabel %></h1>
+    <span class="bar-spacer" aria-hidden="true"></span>
+  </header>
+
+  <main class="day-body">
+    <p class="day-habit">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="<%= icons[habit.icon] %>"/></svg>
+      <%= habit.name %>
+    </p>
+
+    <section class="day-status day-status-<%= status.kind %>">
+      <span class="day-dot" aria-hidden="true"></span>
+      <div>
+        <p class="day-status-title"><%= status.title %></p>
+        <p class="day-status-detail"><%= status.detail %></p>
+      </div>
+    </section>
+
+    <% if (status.kind === 'done') { %>
+      <form method="post" action="/habits/<%= habit.id %>/day/<%= date %>">
+        <input type="hidden" name="action" value="remove">
+        <input type="hidden" name="m" value="<%= m %>">
+        <button class="btn btn-danger-outline btn-block" type="submit">Remove check-in</button>
+      </form>
+      <p class="hint center">Your streak and stats update right away.</p>
+    <% } else if (status.kind !== 'before') { %>
+      <form method="post" action="/habits/<%= habit.id %>/day/<%= date %>">
+        <input type="hidden" name="action" value="add">
+        <input type="hidden" name="m" value="<%= m %>">
+        <button class="btn btn-primary btn-block" type="submit"><%= status.kind === 'off' ? 'Log anyway' : 'Mark as done' %></button>
+      </form>
+      <p class="hint center">It will be noted as added later.</p>
+    <% } %>
+  </main>
+</div>
+</body>
+</html>

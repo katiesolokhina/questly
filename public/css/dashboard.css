@@ -151,3 +151,9 @@ a.icon-btn, button.icon-btn { color: var(--ink); }
 .push-actions { display: flex; gap: 4px; margin-left: -12px; }
 .push-card .btn-outline { margin-top: 4px; }
 .push-card [data-status]:empty { display: none; }
+
+/* Past days are tappable */
+.day-link { text-decoration: none; cursor: pointer; transition: transform .08s ease; }
+.day-link:hover { filter: brightness(0.95); }
+.day-link:active { transform: scale(0.92); }
+.day-link.day-off:hover, .day-link.day-missed:hover { background: var(--lilac-tint); }
