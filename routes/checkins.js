@@ -9,6 +9,7 @@ const { ratingConfig, chips } = require('../lib/ratings');
 const { messageForCheckin } = require('../lib/messages');
 const { localToday, localTime, isYm, isISODate, longDate, dow, DAY_FULL } = require('../lib/dates');
 const icons = require('../lib/icons');
+const { clock } = require('../lib/time');
 
 const router = express.Router();
 
@@ -32,11 +33,18 @@ router.post('/habits/:id/checkin', requireAuth, async (req, res, next) => {
     const today = localToday(req.user.timezone);
     if (today < habit.startDate) return res.redirect(backTo(habit.id, req.body.m));
 
+    // Stopwatch time comes with the check-in; a second session the same day adds to it.
+    const secs = Math.round(Number(req.body.duration));
+    const timed = habit.timer && habit.timer.mode === 'stopwatch' && Number.isFinite(secs) && secs >= 1 && secs <= 86400;
     const result = await Checkin.updateOne(
       { habitId: habit._id, date: today },
-      { $setOnInsert: { userId: req.user._id, habitId: habit._id, date: today, checkedInAt: new Date(), source: 'live' } },
+      {
+        $setOnInsert: { userId: req.user._id, habitId: habit._id, date: today, checkedInAt: new Date(), source: 'live' },
+        ...(timed ? { $inc: { duration: secs } } : {}),
+      },
       { upsert: true }
     );
+    if (timed) await Checkin.updateOne({ habitId: habit._id, date: today, duration: { $gt: 86400 } }, { $set: { duration: 86400 } });
 
     // Only a brand-new check-in gets a message, and failures here never undo the check-in.
     if (result.upsertedCount) {
@@ -91,7 +99,7 @@ async function dayView(req, habit, date, today, extra = {}) {
     const when = checkin.source === 'import' ? 'Imported from your earlier tracking'
       : checkin.source === 'backfill' ? `Added later, on ${longDate(localToday(req.user.timezone, checkin.checkedInAt))}`
       : `Logged at ${localTime(checkin.checkedInAt, req.user.timezone)}`;
-    status = { kind: 'done', title: isToday ? 'Done today' : 'Done', detail: when };
+    status = { kind: 'done', title: isToday ? 'Done today' : 'Done', detail: checkin.duration ? `${when} · ${clock(checkin.duration)} timed` : when };
   } else if (date >= habit.startDate && habit.pauseOn(date)) {
     const reason = Habit.PAUSE_REASONS[habit.pauseOn(date).reason] || 'Break';
     status = { kind: 'paused', title: `Paused · ${reason}`, detail: isToday ? 'Paused today, so nothing is expected. Use “Log anyway” on the main screen if you did it.' : 'Doesn’t count as missed. Did it anyway? Mark it done.' };

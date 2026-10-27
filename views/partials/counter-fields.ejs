@@ -34,6 +34,27 @@
       ${x.err ? `<span class="field-error" id="${x.id}-err">${x.err}</span>` : x.hint ? `<span class="hint" id="${x.id}-hint">${x.hint}</span>` : ''}
     </div>`).join('');
 %>
+<fieldset class="group timer-group">
+  <legend>Timer</legend>
+  <div class="segmented segmented-3" role="radiogroup" aria-label="Timer">
+    <% [['off', 'Off'], ['countdown', 'Countdown'], ['stopwatch', 'Stopwatch']].forEach(([v, l]) => { %>
+      <input class="sr-only" type="radio" id="timerMode-<%= v %>" name="timerMode" value="<%= v %>" <%= values.timerMode === v ? 'checked' : '' %>>
+      <label for="timerMode-<%= v %>"><%= l %></label>
+    <% }) %>
+  </div>
+  <div class="timer-countdown-fields">
+    <div class="timer-len" role="group" aria-labelledby="timer-len-label">
+      <span id="timer-len-label">Countdown length</span>
+      <input id="timerMin" name="timerMin" type="text" inputmode="numeric" maxlength="2" value="<%= values.timerMin %>" aria-label="Minutes"<%- errors.timer ? ' aria-invalid="true" aria-describedby="timer-err"' : '' %>>
+      <span aria-hidden="true">:</span>
+      <input id="timerSec" name="timerSec" type="text" inputmode="numeric" maxlength="2" value="<%= String(values.timerSec).padStart(2, '0') %>" aria-label="Seconds"<%- errors.timer ? ' aria-invalid="true" aria-describedby="timer-err"' : '' %>>
+    </div>
+    <% if (errors.timer) { %><span class="field-error" id="timer-err"><%= errors.timer %></span><% } %>
+  </div>
+  <p class="hint timer-hint-countdown">Tap Start, and when it reaches zero you're checked in automatically (with Undo). Good for “hold for 30 seconds.”</p>
+  <p class="hint timer-hint-stopwatch">Time a session, then Finish to check in with the time saved. A second session the same day adds to it.</p>
+</fieldset>
+
 <fieldset class="group counter-group">
   <legend>Supply countdown</legend>
   <label class="switch-row" for="supplyOn">
@@ -49,7 +70,16 @@
     <span>Count up toward a target, like 30 workouts</span>
     <input class="switch" type="checkbox" id="goalOn" name="goalOn" <%= values.goalOn ? 'checked' : '' %>>
   </label>
-  <div class="counter-fields"><%- render(goalFields) %></div>
+  <div class="counter-fields"><%- render(goalFields) %>
+    <div class="field field-wide">
+      <label for="goalBy">Counts</label>
+      <select id="goalBy" name="goalBy"<%- errors.goalBy ? ' aria-invalid="true" aria-describedby="goalBy-err"' : '' %>>
+        <option value="checkins" <%= values.goalBy !== 'minutes' ? 'selected' : '' %>>Check-ins (times “counts per check-in”)</option>
+        <option value="minutes" <%= values.goalBy === 'minutes' ? 'selected' : '' %>>Timed minutes (stopwatch)</option>
+      </select>
+      <% if (errors.goalBy) { %><span class="field-error" id="goalBy-err"><%= errors.goalBy %></span><% } %>
+    </div>
+  </div>
 </fieldset>
 
 <fieldset class="group">

@@ -20,6 +20,7 @@ const EMPTY = {
   goalOn: false, goalLabel: '', goalTarget: '', goalUnit: 'days', goalPer: '1', goalFrom: '',
   ratingOn: false, ratingQuestion: '', ratingLabels: ['', '', '', '', ''], ratingDir: '',
   milestonesOn: true, showPollen: null,
+  timerMode: 'off', timerMin: '0', timerSec: '30', goalBy: 'checkins',
 };
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -87,10 +88,22 @@ function parseForm(body, today) {
   const ratingLabels = [1, 2, 3, 4, 5].map((i) => str(`ratingLabel${i}`));
   const ratingDir = ['low', 'high'].includes(body.ratingDir) ? body.ratingDir : (defaultsFor(kind).lowIsGood ? 'low' : 'high');
   Object.assign(counters, { ratingOn, ratingQuestion, ratingLabels, ratingDir, milestonesOn: body.milestonesOn === 'on', showPollen: body.showPollen === 'on' });
+  const timerMode = ['countdown', 'stopwatch'].includes(body.timerMode) ? body.timerMode : 'off';
+  const timerMin = str('timerMin', '0');
+  const timerSec = str('timerSec', '0');
+  const goalBy = body.goalBy === 'minutes' ? 'minutes' : 'checkins';
+  Object.assign(counters, { timerMode, timerMin, timerSec, goalBy });
+  const tMin = intField(timerMin || '0', 0, 90);
+  const tSec = intField(timerSec || '0', 0, 59);
+  nums.timerSeconds = Number.isNaN(tMin) || Number.isNaN(tSec) ? NaN : (tMin || 0) * 60 + (tSec || 0);
 
   const errors = {};
   if (ratingQuestion.length > 80) errors.ratingQuestion = 'Keep it to 80 characters or fewer.';
   if (ratingLabels.some((l) => l.length > 16)) errors.ratingLabels = 'Keep each label to 16 characters or fewer.';
+  if (timerMode === 'countdown' && (Number.isNaN(nums.timerSeconds) || nums.timerSeconds < 5 || nums.timerSeconds > 5400)) {
+    errors.timer = 'Set a countdown from 0:05 to 90:00.';
+  }
+  if (goalOn && goalBy === 'minutes' && timerMode !== 'stopwatch') errors.goalBy = 'Counting minutes needs the stopwatch timer.';
   if (supplyOn) {
     if (nums.supplySize === null) errors.supplySize = 'How much is in a full refill?';
     else if (Number.isNaN(nums.supplySize)) errors.supplySize = 'Enter a whole number from 1 to 100,000.';
@@ -148,13 +161,15 @@ function counterDoc(v, nums, { habit, rows, today }) {
       perCheckin: nums.goalPer,
       target: nums.goalTarget,
       from: v.goalFrom || v.startDate,
+      by: v.goalBy,
     });
     const o = old.goal || {};
-    if (!o.enabled || o.target !== goal.target || o.from !== goal.from || o.perCheckin !== goal.perCheckin) goal.celebrated = false;
+    if (!o.enabled || o.target !== goal.target || o.from !== goal.from || o.perCheckin !== goal.perCheckin || (o.by || 'checkins') !== goal.by) goal.celebrated = false;
   }
   // Rating: settings are kept when it's turned off, so turning it back on restores them.
   const rating = { enabled: v.ratingOn, question: v.ratingQuestion, labels: v.ratingLabels, lowIsGood: v.ratingDir === 'low' };
-  return { supply, goal, rating, milestones: { ...(old.milestones || {}), enabled: v.milestonesOn }, showPollen: v.showPollen };
+  const timer = { mode: v.timerMode, seconds: v.timerMode === 'countdown' ? nums.timerSeconds : (old.timer && old.timer.seconds) || 30 };
+  return { supply, goal, rating, timer, milestones: { ...(old.milestones || {}), enabled: v.milestonesOn }, showPollen: v.showPollen };
 }
 
 function toDoc(v) {
@@ -206,6 +221,10 @@ async function counterValues(habit, today) {
     goalFrom: g.from || habit.startDate,
     milestonesOn: !habit.milestones || habit.milestones.enabled !== false,
     showPollen: habit.showPollen ?? habit.kind === 'medication',
+    timerMode: (habit.timer && habit.timer.mode) || 'off',
+    timerMin: String(Math.floor(((habit.timer && habit.timer.seconds) || 30) / 60)),
+    timerSec: String(((habit.timer && habit.timer.seconds) || 30) % 60),
+    goalBy: (habit.goal && habit.goal.by) || 'checkins',
     ratingOn: Boolean(habit.rating && habit.rating.enabled),
     ratingQuestion: (habit.rating && habit.rating.question) || '',
     ratingLabels: [0, 1, 2, 3, 4].map((i) => (habit.rating && habit.rating.labels && habit.rating.labels[i]) || ''),

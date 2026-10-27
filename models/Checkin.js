@@ -21,6 +21,8 @@ const checkinSchema = new mongoose.Schema(
     source: { type: String, enum: ['live', 'import', 'backfill'], default: 'live' },
     // The quote/advice shown for this check-in, frozen so a reload shows the same one.
     message: { type: messageSchema, default: undefined },
+    // Seconds timed with the stopwatch (sessions on the same day add up). Unset when not timed.
+    duration: { type: Number, min: 0, max: 86400 },
   },
   { timestamps: true }
 );

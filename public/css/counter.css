@@ -39,3 +39,35 @@
 .pl-0 { background: var(--off); box-shadow: inset 0 0 0 1px var(--border); }
 .pl-1 { background: #9FE3DA; } .pl-2 { background: #C6E59B; } .pl-3 { background: #FFD27A; }
 .pl-4 { background: #E08A55; } .pl-5 { background: #C25E2A; }
+
+/* Habit form: timer */
+.timer-group .segmented-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.timer-len { display: flex; align-items: center; gap: 6px; font-size: 15px; }
+.timer-len span:first-child { margin-right: auto; }
+.timer-len input { width: 56px; height: 48px; text-align: center; border: 1.5px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; font-size: 18px; font-variant-numeric: tabular-nums; }
+.timer-group:not(:has(#timerMode-countdown:checked)) .timer-countdown-fields,
+.timer-group:not(:has(#timerMode-countdown:checked)) .timer-hint-countdown,
+.timer-group:not(:has(#timerMode-stopwatch:checked)) .timer-hint-stopwatch { display: none; }
+.counter-fields select { height: 48px; padding: 0 12px; width: 100%; border: 1.5px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; }
+
+/* Dashboard: timer card */
+.timer-card[hidden] { display: none; }
+.timer-card { background: var(--surface); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.timer-face { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.timer-time { font-size: 44px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; line-height: 1; }
+.timer-sub { font-size: 14px; color: var(--muted); }
+.timer-bar { height: 8px; border-radius: 4px; background: var(--off); overflow: hidden; }
+.timer-bar > span { display: block; height: 100%; width: 0; background: var(--aqua); border-radius: 4px; transition: width .25s linear; }
+.timer-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.timer-actions .btn { flex: 1; height: 52px; font-size: 17px; }
+.timer-actions .btn-outline { flex: 1; height: 52px; }
+.timer-actions .link-btn { min-height: 44px; }
+.timer-card.is-running { box-shadow: inset 0 0 0 2px var(--aqua); }
+.timer-card:not(.is-running) .timer-bar { display: none; }
+.timer-actions [hidden] { display: none !important; } /* .btn's display would otherwise beat [hidden] */
+.timer-card.is-running ~ form .btn-checkin { display: none; } /* one way to finish while a timer runs */
+/* Stopwatch: a pulsing dot instead of a bar, since it never "fills up" */
+.timer-live { display: inline-flex; align-items: center; gap: 6px; color: var(--aqua-deep); font-weight: 600; }
+.timer-live::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--aqua-deep); animation: timer-pulse 1.2s ease-in-out infinite; }
+@keyframes timer-pulse { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .timer-live::before { animation: none; } }

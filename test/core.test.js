@@ -364,7 +364,7 @@ test('core flows', async (t) => {
     assert.equal((await c(`/habits/${mood}/day/${addDays(today, 1)}/rating`, { method: 'POST', form: { score: '2' } })).status, 400);
     assert.equal((await c(`/habits/${mood}/day/${past}/rating`, { method: 'POST', form: { score: '9' } })).status, 400);
     assert.equal((await c(`/habits/${h}/day/${past}/rating`, { method: 'POST', form: { score: '2' } })).status, 400);
-    assert.match((await c('/settings/export.csv')).text, new RegExp(`"Mood","Habit","${past}","\\w+","Missed","","","2 Meh"`));
+    assert.match((await c('/settings/export.csv')).text, new RegExp(`"Mood","Habit","${past}","\\w+","Missed","","","","2 Meh"`));
   });
 
   await t.test('rating: medication defaults and custom labels', async () => {
@@ -456,6 +456,45 @@ test('core flows', async (t) => {
     r = await c('/go/note');
     assert.match(r.location, new RegExp(`^/habits/[a-f0-9]{24}/day/${today}#note$`));
     assert.equal((await client(app.base)('/go/checkin')).location, '/login');
+  });
+
+  // ---------- Timers ----------
+  await t.test('timer: validation; countdown card shows until done; stopwatch time is saved and adds up', async () => {
+    const base = { kind: 'habit', icon: 'dumbbell', schedule: 'every', startDate: addDays(today, -3) };
+    let r = await c('/habits', { method: 'POST', form: { ...base, name: 'Hold', timerMode: 'countdown', timerMin: '0', timerSec: '2' } });
+    assert.equal(r.status, 422);
+    assert.match(r.text, /0:05 to 90:00/);
+    r = await c('/habits', { method: 'POST', form: { ...base, name: 'Hold', timerMode: 'countdown', timerMin: '90', timerSec: '1' } });
+    assert.equal(r.status, 422, 'over 90:00 is refused');
+    r = await c('/habits', { method: 'POST', form: { ...base, name: 'Hold', timerMode: 'countdown', timerMin: '0', timerSec: '30' } });
+    const hold = r.location.match(/h=([a-f0-9]{24})/)[1];
+    let dash = (await c(`/?h=${hold}`)).text;
+    assert.match(dash, /data-mode="countdown" data-seconds="30"/);
+    assert.match(dash, /Start 0:30/);
+    await c(`/habits/${hold}/checkin`, { method: 'POST', form: { duration: '30' } });
+    dash = (await c(`/?h=${hold}`)).text;
+    assert.doesNotMatch(dash, /data-timer/, 'countdown hides once checked in');
+    assert.equal((await withDb(app.uri, () => Checkin.findOne({ habitId: hold, date: today }).lean())).duration, undefined, 'only stopwatch time is stored');
+
+    r = await c('/habits', { method: 'POST', form: { ...base, name: 'Lift', timerMode: 'stopwatch', goalOn: 'on', goalTarget: '60', goalBy: 'minutes', goalPer: '1' } });
+    const lift = r.location.match(/h=([a-f0-9]{24})/)[1];
+    await c(`/habits/${lift}/checkin`, { method: 'POST', form: { duration: '1500' } });
+    await c(`/habits/${lift}/checkin`, { method: 'POST', form: { duration: '1210' } });
+    dash = (await c(`/?h=${lift}`)).text;
+    assert.match(dash, /Logged at [^<]+ · 45:10 timed/);
+    assert.match(dash, /Time another session/);
+    assert.match(dash, /counter-num">45<\/span> of 60 minutes/);
+    assert.match((await c(`/habits/${lift}/day/${today}`)).text, /45:10 timed/);
+    assert.match((await c('/settings/export.csv')).text, /"Lift","Habit","[^"]+","\w+","Done","On the day","[^"]+","45:10"/);
+    assert.match((await c('/week')).text, /45 min timed/);
+    await c(`/habits/${lift}/checkin`, { method: 'POST', form: { duration: '999999' } });
+    assert.equal((await withDb(app.uri, () => Checkin.findOne({ habitId: lift, date: today }).lean())).duration, 2710, 'out-of-range time is ignored');
+  });
+
+  await t.test('timer: counting minutes needs the stopwatch', async () => {
+    const r = await c('/habits', { method: 'POST', form: { name: 'X', kind: 'habit', schedule: 'every', startDate: today, timerMode: 'off', goalOn: 'on', goalTarget: '10', goalBy: 'minutes', goalPer: '1' } });
+    assert.equal(r.status, 422);
+    assert.match(r.text, /needs the stopwatch/);
   });
 
   await t.test('habits without counters show no counter cards', async () => {

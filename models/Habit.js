@@ -58,6 +58,7 @@ const habitSchema = new mongoose.Schema(
       perCheckin: { type: Number, min: 1, max: 1000, default: 1 },
       target: { type: Number, min: 1, max: 1000000 },
       from: { type: String, match: /^\d{4}-\d{2}-\d{2}$/ },
+      by: { type: String, enum: ['checkins', 'minutes'], default: 'checkins' }, // minutes = stopwatch time
       celebrated: { type: Boolean, default: false }, // "Goal reached" shown; reset when the goal changes
     },
     // Daily 1–5 rating with its own question and labels. lowIsGood: 1 is the best day
@@ -67,6 +68,12 @@ const habitSchema = new mongoose.Schema(
       question: { type: String, trim: true, maxlength: 80, default: '' },
       labels: { type: [{ type: String, trim: true, maxlength: 16 }], default: undefined },
       lowIsGood: { type: Boolean },
+    },
+    // Timer: countdown (hold drops 30 s, then check in automatically) or stopwatch (time a workout;
+    // the time is saved with the check-in). seconds = countdown length.
+    timer: {
+      mode: { type: String, enum: ['off', 'countdown', 'stopwatch'], default: 'off' },
+      seconds: { type: Number, min: 5, max: 5400, default: 30 },
     },
     // Show pollen on this habit (chip + chart line). Unset = on for medications, off for habits.
     showPollen: { type: Boolean },

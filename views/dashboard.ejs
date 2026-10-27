@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/css/milestones.css">
   <link rel="stylesheet" href="/css/demo.css">
   <script src="/js/push-setup.js" defer></script>
+  <script src="/js/timer.js" defer></script>
   <title><%= habit ? habit.name + ' · ' : '' %>Questly</title>
 </head>
 <body>
@@ -88,6 +89,7 @@
     <a class="pause-banner-link" href="/habits/<%= habit.id %>/pauses">Manage</a>
   </div>
 <% } %>
+<%- include('partials/timer') %>
     <% if (todayCheckin) { %>
       <section class="done-card" aria-live="polite">
         <div class="done-row">
@@ -97,8 +99,7 @@
             </span>
             <div>
               <p class="done-title">Done for today</p>
-              <p class="muted small-14">Logged at <%= todayCheckin.time %></p>
-            </div>
+              <p class="muted small-14">Logged at <%= todayCheckin.time %><% if (todayCheckin.timed) { %> · <%= todayCheckin.timed %> timed<% } %></p>            </div>
           </div>
           <form method="post" action="/habits/<%= habit.id %>/checkin/undo">
             <input type="hidden" name="m" value="<%= ym %>">

@@ -1,0 +1,27 @@
+<%# Countdown / stopwatch for habits with a timer. Hidden until timer.js runs (it needs JavaScript).
+    Locals: timer, habit, todayCheckin, ym %>
+<% if (timer && (timer.mode === 'stopwatch' || !todayCheckin)) { %>
+  <section class="timer-card" data-timer data-mode="<%= timer.mode %>" data-seconds="<%= timer.seconds %>" data-habit="<%= habit.id %>" aria-label="Timer" hidden>
+    <div class="timer-face">
+      <span class="timer-time" role="timer" data-time><%= timer.mode === 'countdown' ? timer.clock : '0:00' %></span>
+      <span class="timer-sub" data-sub>
+        <% if (timer.mode === 'countdown') { %>Countdown, then checks in<% } else if (todayCheckin && todayCheckin.timed) { %>Today: <%= todayCheckin.timed %><% } else { %>Stopwatch<% } %>
+      </span>
+    </div>
+    <% if (timer.mode === 'countdown') { %><div class="timer-bar" aria-hidden="true"><span data-bar></span></div><% } %>
+    <div class="timer-actions">
+      <button class="btn btn-primary" type="button" data-act="start">
+        <%= timer.mode === 'countdown' ? 'Start ' + timer.clock : (todayCheckin ? 'Time another session' : 'Start timer') %>
+      </button>
+      <button class="btn-outline" type="button" data-act="pause" hidden>Pause</button>
+      <button class="btn-outline" type="button" data-act="resume" hidden>Resume</button>
+      <button class="btn btn-primary" type="button" data-act="finish" hidden><%= todayCheckin ? 'Finish & add' : 'Finish & check in' %></button>
+      <button class="link-btn" type="button" data-act="cancel" hidden>Cancel</button>
+    </div>
+    <form method="post" action="/habits/<%= habit.id %>/checkin" data-timer-form hidden>
+      <input type="hidden" name="m" value="<%= ym %>">
+      <input type="hidden" name="duration" value="">
+    </form>
+    <p class="sr-only" aria-live="polite" data-announce></p>
+  </section>
+<% } %>
