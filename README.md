@@ -22,6 +22,7 @@ Built by [Katie Solokhina](https://katie.trisolocreations.com).
 - **Supply countdown:** for example, "6 doses left · runs out around Mon, Oct 26". It shows a running-low badge, sends one push per refill, and has a reorder link.
 - **Goal:** a count-up target, such as "87 of 1,095 days" or "60 of 100 pages", with a projected finish date.
 - **Daily rating:** a 1–5 question with your own wording and labels, and a monthly trend chart. It also tells you things like "Done days averaged 1.8, missed days 3.2."
+- **Timer:** a countdown (for example, hold drops for 30 seconds) that checks you in automatically when it ends, or a stopwatch (time a workout) that saves the time with the check-in. Timed minutes show on the day page, the week summary and the CSV, and a goal can count them ("1,500 minutes this season").
 - **Milestones:** badges at 7, 30, 60, 100, 180 and 365 days and beyond, each with a celebration that shows exactly once.
 - **Pollen:** today's tree, grass and weed levels for your city, and a pollen line on the rating chart. It answers "is it the medication or the season?" with findings like "Higher-pollen days averaged 3.2, low-pollen days 1.9." It's on by default for medications.
 
@@ -54,6 +55,7 @@ There's no frontend framework and no build step: pages work without JavaScript, 
 - **Dates are local calendar strings** (`YYYY-MM-DD`), computed in each user's time zone. Date arithmetic runs on UTC midnights, so daylight-saving changes can never skip or repeat a day. "Today" is never the server's today.
 - **Counters are derived, never decremented.** Supply left = amount at the last refill minus the check-ins since then. That's why undo, backfill and past-day fixes always give the right number, and it can't drift.
 - **Exactly-once side effects come from atomic database claims, not timers.** Reminders, low-supply alerts, the weekly push and milestone celebrations each claim their slot with a conditional update or a unique index *before* acting. A restart, two overlapping ticks or a page reload can never send or show anything twice.
+- **Timers survive a locked phone.** The time is calculated from timestamps saved on the device, not by counting ticks, so locking the screen, switching apps or reloading never loses or adds time. The screen stays on while a timer runs (Wake Lock). A countdown that ended while the page was closed is still logged if you come back within 10 minutes, and dropped after that rather than logging a surprise check-in. The server accepts a saved time only from stopwatch habits, and only between 1 second and 24 hours.
 - **Paid APIs can't run up a bill.** Pollen is fetched once per place per day (today + a 4-day forecast, saved), pre-fetched at 6 AM so pages never wait, and backs off for 30 minutes after a failure. A hard daily cap is claimed atomically in the database before every call, and the key is restricted to one API and the server's IP. Tests run against a local stub, so the real API is never called.
 - **The demo can't cost money or leak into real data.** Each visitor gets an isolated account, not a shared login anyone could vandalize. Demo accounts never call external APIs: quotes come from a built-in list, and pollen is sample data stored under a fake place. They can't change a password, set a location, receive push, or appear in the admin's family list, and the server enforces all of this, not just the UI. Opening `/demo` only shows a page, so link previews and crawlers can't create accounts. Creation is a same-origin POST, rate limited per IP and capped globally, and a cleanup job deletes expired copies along with everything they own.
 - **Location stays coarse.** Pollen needs only a city, so coordinates are rounded to about 1 km and no street address is ever stored.
@@ -72,7 +74,8 @@ models/              User, Habit, Checkin, DayNote, Rating, PollenDay, ApiUsage,
 lib/
   dates.js           Calendar math, month grid, streak + adherence
   habits.js          Builds everything the dashboard shows
-  counter.js         Supply countdown + goal math
+  counter.js         Supply countdown + goal math (check-ins or timed minutes)
+  time.js            Duration formatting
   ratings.js         Rating settings + monthly trend
   milestones.js      Best streak + badges
   weekly.js          Weekly summary + push wording
@@ -82,7 +85,7 @@ lib/
   push.js, messages.js, export.js, sessions.js, icons.js
 routes/              One file per area (auth, checkins, habits, settings, family, week, go…)
 views/               EJS pages + partials
-public/              CSS, small JS files, icons, manifest, service worker
+public/              CSS, small JS files (timer, push setup, sharing), icons, manifest, service worker
 scripts/             backup, restore, make-admin, seed
 test/                Unit tests (date, counter, rating, milestone, weekly math) + end-to-end flows
 ```
@@ -134,9 +137,9 @@ npx web-push generate-vapid-keys                                           # VAP
 npm test
 ```
 
-The suite has about 115 tests:
-- **Unit tests** for the date, streak, pause, counter, rating, milestone and weekly rules, and for pollen parsing. These run in milliseconds.
-- **End-to-end tests** that start the real `server.js` against an in-memory MongoDB and drive it like a browser. They cover sign-in, check-in and undo, past-day fixes, notes, pauses, counters, ratings, milestones, the week page, shortcuts, settings, family invites and resets, CSRF rejection, and escaping.
+The suite has about 120 tests:
+- **Unit tests** for the date, streak, pause, counter, rating, milestone, weekly and timer rules, and for pollen parsing. These run in milliseconds.
+- **End-to-end tests** that start the real `server.js` against an in-memory MongoDB and drive it like a browser. They cover sign-in, check-in and undo, past-day fixes, notes, pauses, counters, timers, ratings, milestones, the week page, shortcuts, settings, family invites and resets, CSRF rejection, and escaping.
 - **Tests for the reminder loop,** run in-process at fixed times. These include a Sunday when the clocks fall back.
 - **Demo tests:** isolation, sample data, the locked-down routes, rate limit and cap, and cleanup.
 - **Pollen tests** against a local stub of Google and Open-Meteo. They cover one call per day, the daily cap, back-off after a failure, and that the key never appears in logs.
