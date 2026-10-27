@@ -117,9 +117,9 @@
     <% } else if (scheduledToday) { %>
       <form method="post" action="/habits/<%= habit.id %>/checkin">
         <input type="hidden" name="m" value="<%= ym %>">
-        <button class="btn-checkin" type="submit">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-          Check in for today
+        <button class="btn-checkin<%= timer ? ' btn-checkin-alt' : '' %>" type="submit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+          <%= timer ? 'Check in without timing' : 'Check in for today' %>
         </button>
       </form>
     <% } else { %>

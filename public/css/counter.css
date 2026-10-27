@@ -71,3 +71,16 @@
 .timer-live::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--aqua-deep); animation: timer-pulse 1.2s ease-in-out infinite; }
 @keyframes timer-pulse { 50% { opacity: .25; } }
 @media (prefers-reduced-motion: reduce) { .timer-live::before { animation: none; } }
+
+/* With a timer, Start is the main action and check-in becomes a text link under it.
+   Only when the timer card is actually showing (it needs JavaScript); otherwise the big button stays. */
+.timer-card { box-shadow: 0 1px 2px rgba(31, 34, 48, .06), 0 8px 24px rgba(31, 34, 48, .06); }
+.timer-card .timer-actions .btn[data-act="start"] { height: 64px; font-size: 18px; border-radius: 18px; }
+.timer-card:not([hidden]) ~ form { margin-top: -6px; }
+.timer-card:not([hidden]) ~ form .btn-checkin-alt {
+  all: unset; box-sizing: border-box; cursor: pointer; display: block; width: 100%; min-height: 44px; line-height: 44px; text-align: center;
+  font-size: 15px; font-weight: 600; color: var(--aqua-deep); text-decoration: underline; text-underline-offset: 3px;
+}
+.timer-card:not([hidden]) ~ form .btn-checkin-alt svg { display: none; }
+.timer-card:not([hidden]) ~ form .btn-checkin-alt:focus-visible { outline: 2px solid var(--aqua-deep); outline-offset: 2px; border-radius: 8px; }
+.timer-card.is-running ~ form .btn-checkin-alt { display: none; } /* still hidden while a timer runs */
